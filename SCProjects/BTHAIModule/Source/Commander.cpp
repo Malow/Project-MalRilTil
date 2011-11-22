@@ -567,7 +567,7 @@ TilePosition Commander::findDefensePos(Chokepoint* choke)
 
 	return defPos;
 }
-
+/*
 bool Commander::isEdgeChokepoint(Chokepoint* choke)
 {
 	pair<Region*,Region*> regions = choke->getRegions();
@@ -577,6 +577,23 @@ bool Commander::isEdgeChokepoint(Chokepoint* choke)
 	}
 	return true;
 }
+*/
+
+bool Commander::isEdgeChokepoint(Chokepoint* choke)
+{
+    pair<Region*,Region*> regions = choke->getRegions();
+    //If both is occupied it is not an edge chokepoint
+    if (isOccupied(regions.first) && isOccupied(regions.second))
+    {
+        return false;
+    }
+    //...but one of them must be occupied
+    if (isOccupied(regions.first) || isOccupied(regions.second))
+    {
+        return true;
+    }
+    return false;
+}
 
 bool Commander::isOccupied(Region* region)
 {
@@ -585,7 +602,8 @@ bool Commander::isOccupied(Region* region)
 	for (int i = 0; i < (int)agents.size(); i++)
 	{
 		BaseAgent* agent = agents.at(i);
-		if (agent->isAlive() && agent->isBuilding())
+		//if (agent->isAlive() && agent->isBuilding()) ****
+		if (agent->isAlive() && (agent->isBuilding() && !agent->isOfType(UnitTypes::Protoss_Pylon)))
 		{
 			Region* aRegion = getRegion(agents.at(i)->getUnit()->getTilePosition());
 			Position c1 = region->getCenter();
