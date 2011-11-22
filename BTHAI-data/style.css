@@ -1,0 +1,5 @@
+body{ background-color: #999999;}
+table { background-color: white; border: 1px solid; width: 800;}
+tr {border: 1px solid;}
+td.h {background-color: #ccccff; text-align: center;}
+td {background-color: white; text-align: center;}
