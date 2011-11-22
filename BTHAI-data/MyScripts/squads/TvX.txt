@@ -11,20 +11,30 @@ Unit=Terran_SCV:1
 
 
 <start>
-Type=Offensive
+Type=Rush
 Name=MarineSquad
 MorphsTo=
 Priority=2
-ActivePriority=2
+ActivePriority=1000
+OffenseType=Optional
+<setup>
+Unit=Terran_Marine:14
+Unit=Terran_Medic:6
+<end>
+
+
+<start>
+Type=Offensive
+Name=MarineTankSquad
+MorphsTo=
+Priority=3
+ActivePriority=3
 OffenseType=Required
 <setup>
 Unit=Terran_Marine:32
 Unit=Terran_Medic:16
+Unit=Terran_Siege_Tank_Tank_Mode:8
 <end>
-
-
-
-
 
 
 
