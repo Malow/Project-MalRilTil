@@ -5,6 +5,8 @@
 #include "Squad.h"
 #include "TargetingAgent.h"
 
+#include <sstream>
+
 MarineAgent::MarineAgent(Unit* mUnit)
 {
 	unit = mUnit;
@@ -46,7 +48,31 @@ bool MarineAgent::isNeededInBunker()
 void MarineAgent::computeActions()
 {
 	if (isNeededInBunker()) return;
+	//Broodwar->printf("Calling on computeActions for marine");
+	/*
+	// Used for printing all abilities
+	for(int i = 0; i < 10; i++)
+	{
+		string asd = "";
+		asd.append(TechType(i).getName());
+		asd.append(" - ");
 
+		std::stringstream out;
+		out << i;
+		asd.append(out.str().c_str());
+
+		Broodwar->printf(asd.c_str());
+	}
+	*/
+	if(this->enemyUnitsWithinRange(300) > 0)
+	{
+		if(!unit->isStimmed())
+		{
+			unit->useTech(TechType(0));
+			//asd.append(TechType(0).getName().c_str());
+			//Broodwar->printf(asd.c_str());
+		}
+	}
 	bool defensive = false;
 	PFManager::getInstance()->computeAttackingUnitActions(this, goal, defensive);
 }

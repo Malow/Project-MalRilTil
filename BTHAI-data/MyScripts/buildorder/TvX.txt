@@ -2,9 +2,9 @@ Terran_Supply_Depot
 Terran_Barracks
 Terran_Barracks
 Terran_Bunker
+Terran_Refinery
 Terran_Academy
 Terran_Barracks
-Terran_Refinery
 Terran_Engineering_Bay
-
-
+Terran_Factory
+Terran_Armory

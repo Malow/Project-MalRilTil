@@ -2,4 +2,14 @@ Stim_Packs:1
 Terran_Infantry_Weapons:1
 U-238_Shells:1
 Terran_Infantry_Armor:2
-
+Tank_Siege_Mode:1
+Terran_Vehicle_Weapons:2
+Terran_Infantry_Weapons:2
+Terran_Vehicle_Plating:2
+Terran_Vehicle_Weapons:3
+Terran_Infantry_Armor:3
+Terran_Infantry_Weapons:3
+Terran_Vehicle_Weapons:3
+Terran_Vehicle_Plating:3
+Terran_Infantry_Armor:3
+Terran_Vehicle_Plating:3
