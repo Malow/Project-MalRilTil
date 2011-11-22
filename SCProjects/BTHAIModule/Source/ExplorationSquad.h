@@ -15,7 +15,9 @@ using namespace std;
 class ExplorationSquad : public Squad {
 
 private:
-	
+	bool enemyBaseExplored;
+	set<TilePosition> startLocations;
+	int timesSenseExploredBase;
 	
 public:
 	/** Constructor. See Squad.h for more details. */
