@@ -1,0 +1,5 @@
+Stim_Packs:1
+Terran_Infantry_Weapons:1
+U-238_Shells:1
+Terran_Infantry_Armor:2
+
