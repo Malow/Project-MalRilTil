@@ -15,6 +15,9 @@ ExplorationSquad::ExplorationSquad(int mId, string mName, int mPriority)
 	goal = Broodwar->self()->getStartLocation();
 	goalSetFrame = 0;
 	currentState = STATE_NOT_SET;
+	this->startLocations = Broodwar->getStartLocations();
+	this->enemyBaseExplored = false;
+	this->timesSenseExploredBase = 0;
 }
 
 bool ExplorationSquad::isActive()
@@ -64,15 +67,37 @@ void ExplorationSquad::computeActions()
 		active = false;
 		return;
 	}
-
+	
 	if (active)
 	{
+		if(timesSenseExploredBase == 3)
+		{
+			this->startLocations = Broodwar->getStartLocations();
+		}
+
+		TilePosition nGoal;
+
 		if (activePriority != priority)
 		{
 			priority = activePriority;
 		}
 
-		TilePosition nGoal = ExplorationManager::getInstance()->getNextToExplore(this);
+		if(startLocations.size() == 0)
+		{
+			timesSenseExploredBase = timesSenseExploredBase + 1; 
+			nGoal = ExplorationManager::getInstance()->getNextToExplore(this);
+		}
+		else
+		{
+			Broodwar->printf("%d nr of startlocations: ", startLocations.size());
+			Broodwar->printf("Going to enemy base");
+			set<TilePosition>::iterator go;
+			go=startLocations.begin();
+			nGoal = *go;
+			startLocations.erase(go);
+			Broodwar->printf("%d nr of startlocations: ", startLocations.size());
+		}
+
 		if (nGoal.x() >= 0)
 		{
 			this->goal = nGoal;
