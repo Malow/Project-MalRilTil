@@ -114,9 +114,9 @@ void SquadFileReader::createSquad()
 	{
 		cSquad = new Squad(id, Squad::DEFENSIVE, name, priority);
 	}
-	else if (type == "Support")
+	else if (type == "Rush")
 	{
-		cSquad = new Squad(id, Squad::SUPPORT, name, priority);
+		cSquad = new Squad(id, Squad::RUSH, name, priority);
 	}
 	else if (type == "Support")
 	{
