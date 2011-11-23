@@ -8,6 +8,8 @@
 #include "Profiler.h"
 #include <algorithm>
 
+#include "MalRilTil.h"
+
 Commander* Commander::instance = NULL;
 
 Commander::Commander()
@@ -61,7 +63,23 @@ void Commander::computeActions()
 			forceAttack();
 		}
 	}
-
+/*
+	if(currentState == RUSH)
+	{
+		TilePosition defSpot = findChokePoint();
+		for (int i = 0; i < (int)squads.size(); i++)
+		{
+			if (!squads.at(i)->hasGoal())
+			{
+				if (defSpot.x() != -1)
+				{
+					if(!squads.at(i)->isRush())
+						squads.at(i)->defend(defSpot);
+				}		
+			}
+		}
+	}
+*/
 	if (currentState == DEFEND)
 	{
 		TilePosition defSpot = findChokePoint();
@@ -72,7 +90,7 @@ void Commander::computeActions()
 				if (defSpot.x() != -1)
 				{
 					squads.at(i)->defend(defSpot);
-				}
+				}		
 			}
 		}
 	}
@@ -81,6 +99,12 @@ void Commander::computeActions()
 	{
 		for (int i = 0; i < (int)squads.size(); i++)
 		{
+			if(squads.at(i)->isRush())
+			{
+				TilePosition pos = MalRilTilData::enemyBasePosition;
+				squads.at(i)->attack(pos);
+				//Broodwar->printf("ATTACKING WITH RUSH LOL COMPUTE AC");
+			}
 			if (squads.at(i)->isOffensive())
 			{
 				if (!squads.at(i)->hasGoal())
@@ -103,6 +127,19 @@ void Commander::computeActions()
 		}
 	}
 	
+	
+	for (int i = 0; i < (int)squads.size(); i++)
+	{
+		if(squads.at(i)->isRush() && squads.at(i)->isFull())
+		{
+			TilePosition pos = MalRilTilData::enemyBasePosition;
+			squads.at(i)->attack(pos);
+			Broodwar->printf("Starting a rush-attack on %d, %d", pos.x(), pos.y());
+			this->currentState = RUSH;
+		}
+	}
+	
+
 	//Check if there are obstacles we can remove. Needed for some
 	//strange maps.
 	if (Broodwar->getFrameCount() % 150 == 0)
@@ -852,6 +889,36 @@ void Commander::forceAttack()
 				squads.at(i)->attack(cGoal);
 			}
 		}
+		else if(squads.at(i)->isRush())
+		{
+			//Broodwar->printf("Forcing rush squad to attack");
+			squads.at(i)->forceActive();
+			TilePosition pos = MalRilTilData::enemyBasePosition;
+			squads.at(i)->attack(pos);
+			
+			// Remove marines from bunkers to join
+			int added = 0;
+			for (int y = 0; y < (int)squads.size(); y++)
+			{
+				Squad* sq = squads.at(y);
+				if (sq->isBunkerDefend())
+				{
+					for (int u = 0; u < sq->size(); u++)
+					{
+						if (sq->hasUnits(UnitTypes::Terran_Marine, 1))
+						{
+							BaseAgent* ma = sq->removeMember(UnitTypes::Terran_Marine);
+							if (ma != NULL)
+							{
+								added++;
+								squads.at(i)->addMember(ma);
+								ma->clearGoal();
+							}
+						}
+					}
+				}
+			}
+		}
 	}
 
 	currentState = ATTACK;
@@ -962,21 +1029,18 @@ void Commander::addBunkerSquad()
 	for (int i = 0; i < (int)squads.size(); i++)
 	{
 		Squad* sq = squads.at(i);
-		if (sq->isOffensive() || sq->isDefensive())
+		if (sq->isOffensive() || sq->isDefensive() || sq->isRush())
 		{
-			for (int i = 0; i < 4 - added; i++)
+			for (int u = 0; u < sq->size() && added < 4; u++)
 			{
 				if (sq->hasUnits(UnitTypes::Terran_Marine, 1))
 				{
-					if (added < 4)
-				{
-						BaseAgent* ma = sq->removeMember(UnitTypes::Terran_Marine);
-						if (ma != NULL)
-				{
-							added++;
-							bSquad->addMember(ma);
-							ma->clearGoal();
-						}
+					BaseAgent* ma = sq->removeMember(UnitTypes::Terran_Marine);
+					if (ma != NULL)
+					{
+						added++;
+						bSquad->addMember(ma);
+						ma->clearGoal();
 					}
 				}
 			}

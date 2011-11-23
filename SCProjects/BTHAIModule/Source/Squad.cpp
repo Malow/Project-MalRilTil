@@ -882,7 +882,7 @@ int Squad::getStrength()
 
 bool Squad::isOffensive()
 {
-	return type == OFFENSIVE;
+	return type == OFFENSIVE/* || type == RUSH*/;
 }
 
 bool Squad::isDefensive()
@@ -898,6 +898,11 @@ bool Squad::isExplorer()
 bool Squad::isSupport()
 {
 	return type == SUPPORT;
+}
+
+bool Squad::isRush()
+{
+	return type == RUSH;
 }
 
 bool Squad::isBunkerDefend()

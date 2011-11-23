@@ -199,6 +199,8 @@ public:
 	/** Returns true if this is a Support Squad. */
 	bool isSupport();
 
+	bool isRush();
+
 	/** Returns true if this is an Explorer Squad. */
 	bool isExplorer();
 
@@ -262,6 +264,8 @@ public:
 	/** Bunker Defense Squad */
 	static const int BUNKER = 4;
 	/** Special Squad */
+	static const int RUSH = 6;
+	/** RUSH squad */
 	static const int SPECIAL = 5;
 	/** Ground Squad */
 	static const int GROUND = 0;

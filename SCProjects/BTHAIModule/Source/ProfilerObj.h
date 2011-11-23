@@ -1,5 +1,5 @@
 #ifndef __PROFILEROBJ_H__
-#define __PROFILERBJ_H__
+#define __PROFILEROBJ_H__
 
 #include "BaseAgent.h"
 
