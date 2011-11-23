@@ -116,7 +116,7 @@ void Squad::addSetup(UnitType type, int no)
 	us.no = no;
 	us.current = 0;
 	setup.push_back(us);
-
+	
 	if (!type.isFlyer())
 	{
 		moveType = GROUND;
@@ -238,14 +238,14 @@ Unit* Squad::findTarget()
 				for(set<Unit*>::const_iterator i=Broodwar->enemy()->getUnits().begin();i!=Broodwar->enemy()->getUnits().end();i++)
 				{
 					if ((*i)->exists())
-				{
+					{
 						double dist = agent->getUnit()->getDistance((*i));
 				
 						//Check if enemy unit is cloaked
 						if (dist <= maxRange)
-				{
+						{
 							if ((*i)->isCloaked())
-				{
+							{
 								Commander::getInstance()->handleCloakedEnemy((*i)->getTilePosition(), this);
 							}
 
@@ -582,6 +582,9 @@ void Squad::attack(TilePosition mGoal)
 
 	if (isActive())
 	{
+		if(this->isRush())
+			Broodwar->printf("Setting goal");
+
 		setGoal(mGoal);
 	}
 }
@@ -636,7 +639,10 @@ void Squad::setGoal(TilePosition mGoal)
 					arrivedFrame = -1;
 					pathIndex = 10;
 
-					if (path.size() == 0) return;
+					if (path.size() == 0) 
+					{
+						return;
+					}
 				}
 			}
 		}

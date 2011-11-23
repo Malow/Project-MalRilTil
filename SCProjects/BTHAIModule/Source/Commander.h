@@ -58,7 +58,6 @@ protected:
 	int currentState;
 	static const int DEFEND = 0;
 	static const int ATTACK = 1;
-	static const int RUSH = 2;
 
 	Commander();
 

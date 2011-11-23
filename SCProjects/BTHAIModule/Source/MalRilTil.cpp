@@ -1,3 +1,3 @@
 #include "MalRilTil.h"
 
-TilePosition MalRilTilData::enemyBasePosition = TilePosition(1,1);
+TilePosition MalRilTilData::enemyBasePosition = TilePosition(-1,-1);

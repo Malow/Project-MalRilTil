@@ -63,23 +63,7 @@ void Commander::computeActions()
 			forceAttack();
 		}
 	}
-/*
-	if(currentState == RUSH)
-	{
-		TilePosition defSpot = findChokePoint();
-		for (int i = 0; i < (int)squads.size(); i++)
-		{
-			if (!squads.at(i)->hasGoal())
-			{
-				if (defSpot.x() != -1)
-				{
-					if(!squads.at(i)->isRush())
-						squads.at(i)->defend(defSpot);
-				}		
-			}
-		}
-	}
-*/
+
 	if (currentState == DEFEND)
 	{
 		TilePosition defSpot = findChokePoint();
@@ -90,7 +74,7 @@ void Commander::computeActions()
 				if (defSpot.x() != -1)
 				{
 					squads.at(i)->defend(defSpot);
-				}		
+				}
 			}
 		}
 	}
@@ -102,6 +86,7 @@ void Commander::computeActions()
 			if(squads.at(i)->isRush())
 			{
 				TilePosition pos = MalRilTilData::enemyBasePosition;
+				squads.at(i)->forceActive();
 				squads.at(i)->attack(pos);
 				//Broodwar->printf("ATTACKING WITH RUSH LOL COMPUTE AC");
 			}
@@ -127,19 +112,19 @@ void Commander::computeActions()
 		}
 	}
 	
-	
+	// Checking if rush squad should move out.
 	for (int i = 0; i < (int)squads.size(); i++)
 	{
 		if(squads.at(i)->isRush() && squads.at(i)->isFull())
 		{
 			TilePosition pos = MalRilTilData::enemyBasePosition;
+			squads.at(i)->forceActive();
 			squads.at(i)->attack(pos);
 			Broodwar->printf("Starting a rush-attack on %d, %d", pos.x(), pos.y());
-			this->currentState = RUSH;
 		}
 	}
 	
-
+	
 	//Check if there are obstacles we can remove. Needed for some
 	//strange maps.
 	if (Broodwar->getFrameCount() % 150 == 0)
