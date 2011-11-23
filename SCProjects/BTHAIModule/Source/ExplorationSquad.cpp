@@ -32,12 +32,7 @@ void ExplorationSquad::defend(TilePosition mGoal)
 
 void ExplorationSquad::attack(TilePosition mGoal)
 {
-	TilePosition nGoal = Broodwar->self()->getStartLocation();
-	if (nGoal.x() >= 0)
-	{
-		this->goal = nGoal;
-		setMemberGoals(goal);
-	}
+
 }
 
 void ExplorationSquad::assist(TilePosition mGoal)
@@ -47,10 +42,6 @@ void ExplorationSquad::assist(TilePosition mGoal)
 
 void ExplorationSquad::computeActions()
 {
-	if(this->isUnderAttack() == true)
-	{
-		this->currentState = STATE_DEFEND;
-	}
 	if (!active)
 	{
 		if (isFull())
@@ -117,7 +108,6 @@ void ExplorationSquad::computeActions()
 				nGoal = ExplorationManager::getInstance()->getNextToExplore(this);
 			}
 		}
-		Broodwar->drawTextScreen(300, 40, "TimeSenseStartLocExplore %d", this->timesSenseExploredBase); // For testing
 		if (nGoal.x() >= 0)
 		{
 			this->goal = nGoal;
