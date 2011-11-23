@@ -32,7 +32,12 @@ void ExplorationSquad::defend(TilePosition mGoal)
 
 void ExplorationSquad::attack(TilePosition mGoal)
 {
-
+	TilePosition nGoal = Broodwar->self()->getStartLocation();
+	if (nGoal.x() >= 0)
+	{
+		this->goal = nGoal;
+		setMemberGoals(goal);
+	}
 }
 
 void ExplorationSquad::assist(TilePosition mGoal)
@@ -42,6 +47,10 @@ void ExplorationSquad::assist(TilePosition mGoal)
 
 void ExplorationSquad::computeActions()
 {
+	if(this->isUnderAttack() == true)
+	{
+		this->currentState = STATE_DEFEND;
+	}
 	if (!active)
 	{
 		if (isFull())
@@ -64,19 +73,26 @@ void ExplorationSquad::computeActions()
 	//All units dead, go back to inactive
 	if ((int)agents.size() == 0)
 	{
+		this->startLocations.clear();
+		TilePosition nGoal = ExplorationManager::getInstance()->getNextToExplore(this);
+		if (nGoal.x() >= 0)
+		{
+			this->goal = nGoal;
+			setMemberGoals(goal);
+		}
+		this->clearGoal();
 		active = false;
 		return;
 	}
 	
 	if (active)
 	{
-		if(timesSenseExploredBase == 3)
+		TilePosition nGoal;
+		if(this->timesSenseExploredBase > 100)
 		{
 			this->startLocations = Broodwar->getStartLocations();
+			this->timesSenseExploredBase = 0;
 		}
-
-		TilePosition nGoal;
-
 		if (activePriority != priority)
 		{
 			priority = activePriority;
@@ -84,20 +100,24 @@ void ExplorationSquad::computeActions()
 
 		if(startLocations.size() == 0)
 		{
-			timesSenseExploredBase = timesSenseExploredBase + 1; 
+			this->timesSenseExploredBase = this->timesSenseExploredBase + 1; 
 			nGoal = ExplorationManager::getInstance()->getNextToExplore(this);
 		}
 		else
 		{
-			Broodwar->printf("%d nr of startlocations: ", startLocations.size());
-			Broodwar->printf("Going to enemy base");
 			set<TilePosition>::iterator go;
 			go=startLocations.begin();
-			nGoal = *go;
 			startLocations.erase(go);
-			Broodwar->printf("%d nr of startlocations: ", startLocations.size());
+			if(*go != Broodwar->self()->getStartLocation())
+			{
+				nGoal = *go;
+			}
+			else
+			{
+				nGoal = ExplorationManager::getInstance()->getNextToExplore(this);
+			}
 		}
-
+		Broodwar->drawTextScreen(300, 40, "TimeSenseStartLocExplore %d", this->timesSenseExploredBase); // For testing
 		if (nGoal.x() >= 0)
 		{
 			this->goal = nGoal;
