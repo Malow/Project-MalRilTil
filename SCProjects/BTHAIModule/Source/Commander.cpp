@@ -8,6 +8,8 @@
 #include "Profiler.h"
 #include <algorithm>
 
+#include "MalRilTil.h"
+
 Commander* Commander::instance = NULL;
 
 Commander::Commander()
@@ -81,6 +83,13 @@ void Commander::computeActions()
 	{
 		for (int i = 0; i < (int)squads.size(); i++)
 		{
+			if(squads.at(i)->isRush())
+			{
+				TilePosition pos = MalRilTilData::enemyBasePosition;
+				squads.at(i)->forceActive();
+				squads.at(i)->attack(pos);
+				//Broodwar->printf("ATTACKING WITH RUSH LOL COMPUTE AC");
+			}
 			if (squads.at(i)->isOffensive())
 			{
 				if (!squads.at(i)->hasGoal())
@@ -102,6 +111,19 @@ void Commander::computeActions()
 			}
 		}
 	}
+	
+	// Checking if rush squad should move out.
+	for (int i = 0; i < (int)squads.size(); i++)
+	{
+		if(squads.at(i)->isRush() && squads.at(i)->isFull())
+		{
+			TilePosition pos = MalRilTilData::enemyBasePosition;
+			squads.at(i)->forceActive();
+			squads.at(i)->attack(pos);
+			Broodwar->printf("Starting a rush-attack on %d, %d", pos.x(), pos.y());
+		}
+	}
+	
 	
 	//Check if there are obstacles we can remove. Needed for some
 	//strange maps.
@@ -135,69 +157,6 @@ void Commander::computeActions()
 
 		//Check if there are units we need to repair.
 		checkRepairUnits();
-
-		//**scanner sweep on mineral fields(exps) not controlled by the bot(when having over 99 mana)**
-		vector<BaseAgent*> agents = AgentManager::getInstance()->getAgents();
-		//hämta ut alla geysers
-		/*
-		set<Unit*> geysers = Broodwar->getStaticGeysers();
-		set<Unit*>::iterator go;
-		go = geysers.begin();
-		Unit* nGoal = *go;
-		*/
-
-		
-		/*
-		for(int i = 0; i < (int)agents.size(); i++)
-		{
-			BaseAgent* agent = agents.at(i);
-			if(agent->isOfType(UnitTypes::Resource_Vespene_Geyser))
-			{
-				Broodwar->printf("geyser added");
-				geysers.push_back(agent);
-			}
-		}
-*/
-		BaseAgent* CC = AgentManager::getInstance()->getAgent(0);
-		int index = 0;
-		for(int i = 0; i < (int)agents.size(); i++)
-		{
-			BaseAgent* agent = agents.at(i);
-			if(agent->isAlive() && agent->isOfType(UnitTypes::Terran_Comsat_Station))
-			{
-				if(agent->getUnit()->getEnergy() >= 100)
-				{
-					//CC->doScannerSweep(agent->getUnit()->getTilePosition()); //**temp
-					//set<Unit*>::const_iterator geysers = Broodwar->getStaticGeysers().begin();
-					int index = 0;
-					TilePosition tp;
-
-					for(set<Unit*>::const_iterator i = Broodwar->getStaticGeysers().begin(); i != Broodwar->getStaticGeysers().end(); i++)
-					{
-						tp = (*i)->getTilePosition();
-						//Broodwar->printf("nr of geysers looped: %d", ++index);
-						//Broodwar->printf("pos of mineralpatch: %d, %d", tp.x(), tp.y());
-					}
-					CC->doScannerSweep(tp);
-					//CC->doScannerSweep(nGoal->getTilePosition());
-					//CC->doScannerSweep(geysers.at(index++)->getUnit()->getTilePosition());
-				}
-			}
-		}
-
-					
-
-/*
-		std::set<Unit*> mineralFields = Broodwar->getStaticMinerals();
-		set<Unit*>::iterator go;
-		go = mineralFields.begin();
-		Unit* nGoal = *go;
-		mineralFields.erase(go);
-
-		BaseAgent* CC = AgentManager::getInstance()->getAgent(0);
-
-		CC->doScannerSweep(nGoal->getTilePosition());
-*/
 	}
 
 	//Check for units not belonging to a squad
@@ -370,36 +329,15 @@ void Commander::handleCloakedEnemy(TilePosition pos, Squad* squad)
 	}
 	if (BuildPlanner::isTerran())
 	{
-		Broodwar->printf("Invisible unit detected, responding..."); 
-		
 		vector<BaseAgent*> agents = AgentManager::getInstance()->getAgents();
 		if ((int)agents.size() > 0)
 		{
-		
-			BaseAgent* Comsat = AgentManager::getInstance()->getAgent(0);
-			
-			//**
-			//squad->getHealthPct	hp
-			//squad->getMembers		
-			//squad->getStrength	styrka
-			//squad->isCloseTo(pos)	onödig? eftersom det var denna squad som träffade osynlig?
-			//squad->isGathered
-			//squad->isUnderAttack	onödig?
-			//squad->size			antal
-			//AA VS Anti-AA etc
-			//**
-			//Broodwar->printf("...decided to flee");
-			//om inte comsat station finns/har tillräckligt med energi ska en detector letas upp & användas
-			bool ok = Comsat->doScannerSweep(pos); //scan where invisible unit is
-			squad->attack(pos); //tell squad(the one which detected it) to attack it
-			Broodwar->printf("...scan used, attacking");
-			if(ok)
+			bool ok = agents.at(0)->doScannerSweep(pos);
+			if (ok)
 			{
 				return;
 			}
 		}
-		
-		
 	}
 	if (BuildPlanner::isZerg())
 	{
@@ -936,6 +874,36 @@ void Commander::forceAttack()
 				squads.at(i)->attack(cGoal);
 			}
 		}
+		else if(squads.at(i)->isRush())
+		{
+			//Broodwar->printf("Forcing rush squad to attack");
+			squads.at(i)->forceActive();
+			TilePosition pos = MalRilTilData::enemyBasePosition;
+			squads.at(i)->attack(pos);
+			
+			// Remove marines from bunkers to join
+			int added = 0;
+			for (int y = 0; y < (int)squads.size(); y++)
+			{
+				Squad* sq = squads.at(y);
+				if (sq->isBunkerDefend())
+				{
+					for (int u = 0; u < sq->size(); u++)
+					{
+						if (sq->hasUnits(UnitTypes::Terran_Marine, 1))
+						{
+							BaseAgent* ma = sq->removeMember(UnitTypes::Terran_Marine);
+							if (ma != NULL)
+							{
+								added++;
+								squads.at(i)->addMember(ma);
+								ma->clearGoal();
+							}
+						}
+					}
+				}
+			}
+		}
 	}
 
 	currentState = ATTACK;
@@ -1046,21 +1014,18 @@ void Commander::addBunkerSquad()
 	for (int i = 0; i < (int)squads.size(); i++)
 	{
 		Squad* sq = squads.at(i);
-		if (sq->isOffensive() || sq->isDefensive())
+		if (sq->isOffensive() || sq->isDefensive() || sq->isRush())
 		{
-			for (int i = 0; i < 4 - added; i++)
+			for (int u = 0; u < sq->size() && added < 4; u++)
 			{
 				if (sq->hasUnits(UnitTypes::Terran_Marine, 1))
 				{
-					if (added < 4)
-				{
-						BaseAgent* ma = sq->removeMember(UnitTypes::Terran_Marine);
-						if (ma != NULL)
-				{
-							added++;
-							bSquad->addMember(ma);
-							ma->clearGoal();
-						}
+					BaseAgent* ma = sq->removeMember(UnitTypes::Terran_Marine);
+					if (ma != NULL)
+					{
+						added++;
+						bSquad->addMember(ma);
+						ma->clearGoal();
 					}
 				}
 			}

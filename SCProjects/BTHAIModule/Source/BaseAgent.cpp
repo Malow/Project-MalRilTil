@@ -216,29 +216,18 @@ bool BaseAgent::doScannerSweep(TilePosition pos)
 		return false;
 	}
 
-	bool hasComsat = false;
 	vector<BaseAgent*> agents = AgentManager::getInstance()->getAgents();
 	for (int i = 0; i < (int)agents.size(); i++)
 	{
 		BaseAgent* agent = agents.at(i);
 		if (agent->isAlive() && agent->isOfType(UnitTypes::Terran_Comsat_Station))
 		{
-			hasComsat = true;
 			if (agent->getUnit()->getEnergy() >= 50)
 			{
 				agent->getUnit()->useTech(TechTypes::Scanner_Sweep, Position(pos));
-				Broodwar->printf("Scan used at: %d, %d", pos.x(), pos.y());
 				return true;
 			}
-			else
-			{
-				Broodwar->printf("Could not scan, insufficient energy");
-			}
 		}
-	}
-	if(!hasComsat)
-	{
-		Broodwar->printf("Could not scan, no comsat station");
 	}
 
 	return false;
