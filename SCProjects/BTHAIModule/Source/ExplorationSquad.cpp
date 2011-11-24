@@ -1,6 +1,7 @@
 #include "ExplorationSquad.h"
 #include "UnitAgent.h"
 #include "ExplorationManager.h"
+#include "MalRilTil.h"
 
 ExplorationSquad::ExplorationSquad(int mId, string mName, int mPriority)
 {
@@ -101,6 +102,7 @@ void ExplorationSquad::computeActions()
 			startLocations.erase(go);
 			if(*go != Broodwar->self()->getStartLocation())
 			{
+				MalRilTilData::enemyBasePosition = *go;
 				nGoal = *go;
 			}
 			else
