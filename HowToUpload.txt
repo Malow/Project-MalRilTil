@@ -2,3 +2,4 @@ Copy all files you've changed into this folder at the correct place from your wo
 Right click on folder -> Choose commit. Do not push!
 Right click on folder, choose Pull! It should now properly merge the online-version with your version.
 Now you right click on folder en choose push! And it will upload properly merged on the homepage.
+.
