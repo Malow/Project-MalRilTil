@@ -1,3 +1,0 @@
-Version=1
-ScriptPath=bwapi-data\AI\BTHAI-data\MyScripts\
-BotName=MyBot
