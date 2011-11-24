@@ -157,6 +157,69 @@ void Commander::computeActions()
 
 		//Check if there are units we need to repair.
 		checkRepairUnits();
+
+		//**scanner sweep on mineral fields(exps) not controlled by the bot(when having over 99 mana)**
+		vector<BaseAgent*> agents = AgentManager::getInstance()->getAgents();
+		//hämta ut alla geysers
+		/*
+		set<Unit*> geysers = Broodwar->getStaticGeysers();
+		set<Unit*>::iterator go;
+		go = geysers.begin();
+		Unit* nGoal = *go;
+		*/
+
+		
+		/*
+		for(int i = 0; i < (int)agents.size(); i++)
+		{
+			BaseAgent* agent = agents.at(i);
+			if(agent->isOfType(UnitTypes::Resource_Vespene_Geyser))
+			{
+				Broodwar->printf("geyser added");
+				geysers.push_back(agent);
+			}
+		}
+*/
+		BaseAgent* CC = AgentManager::getInstance()->getAgent(0);
+		int index = 0;
+		for(int i = 0; i < (int)agents.size(); i++)
+		{
+			BaseAgent* agent = agents.at(i);
+			if(agent->isAlive() && agent->isOfType(UnitTypes::Terran_Comsat_Station))
+			{
+				if(agent->getUnit()->getEnergy() >= 100)
+				{
+					//CC->doScannerSweep(agent->getUnit()->getTilePosition()); //**temp
+					//set<Unit*>::const_iterator geysers = Broodwar->getStaticGeysers().begin();
+					int index = 0;
+					TilePosition tp;
+
+					for(set<Unit*>::const_iterator i = Broodwar->getStaticGeysers().begin(); i != Broodwar->getStaticGeysers().end(); i++)
+					{
+						tp = (*i)->getTilePosition();
+						//Broodwar->printf("nr of geysers looped: %d", ++index);
+						//Broodwar->printf("pos of mineralpatch: %d, %d", tp.x(), tp.y());
+					}
+					CC->doScannerSweep(tp);
+					//CC->doScannerSweep(nGoal->getTilePosition());
+					//CC->doScannerSweep(geysers.at(index++)->getUnit()->getTilePosition());
+				}
+			}
+		}
+
+					
+
+/*
+		std::set<Unit*> mineralFields = Broodwar->getStaticMinerals();
+		set<Unit*>::iterator go;
+		go = mineralFields.begin();
+		Unit* nGoal = *go;
+		mineralFields.erase(go);
+
+		BaseAgent* CC = AgentManager::getInstance()->getAgent(0);
+
+		CC->doScannerSweep(nGoal->getTilePosition());
+*/
 	}
 
 	//Check for units not belonging to a squad
@@ -321,6 +384,7 @@ TilePosition Commander::getClosestEnemyBuilding(TilePosition start)
 	return TilePosition(-1,-1);
 }
 
+
 void Commander::handleCloakedEnemy(TilePosition pos, Squad* squad)
 {
 	if (BuildPlanner::isProtoss())
@@ -329,21 +393,43 @@ void Commander::handleCloakedEnemy(TilePosition pos, Squad* squad)
 	}
 	if (BuildPlanner::isTerran())
 	{
+		Broodwar->printf("Invisible unit detected, responding..."); 
+		
 		vector<BaseAgent*> agents = AgentManager::getInstance()->getAgents();
 		if ((int)agents.size() > 0)
 		{
-			bool ok = agents.at(0)->doScannerSweep(pos);
-			if (ok)
+		
+			BaseAgent* Comsat = AgentManager::getInstance()->getAgent(0);
+			
+			//**
+			//squad->getHealthPct	hp
+			//squad->getMembers		
+			//squad->getStrength	styrka
+			//squad->isCloseTo(pos)	onödig? eftersom det var denna squad som träffade osynlig?
+			//squad->isGathered
+			//squad->isUnderAttack	onödig?
+			//squad->size			antal
+			//AA VS Anti-AA etc
+			//**
+			//Broodwar->printf("...decided to flee");
+			//om inte comsat station finns/har tillräckligt med energi ska en detector letas upp & användas
+			bool ok = Comsat->doScannerSweep(pos); //scan where invisible unit is
+			squad->attack(pos); //tell squad(the one which detected it) to attack it
+			Broodwar->printf("...scan used, attacking");
+			if(ok)
 			{
 				return;
 			}
 		}
+		
+		
 	}
 	if (BuildPlanner::isZerg())
 	{
 		
 	}
 }
+
 
 Squad* Commander::getSquad(int id)
 {

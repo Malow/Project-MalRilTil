@@ -227,7 +227,8 @@ void Squad::checkAttack()
 
 Unit* Squad::findTarget()
 {
-	try {
+	try 
+	{
 		//Enemy units
 		for (int i = 0; i < (int)agents.size(); i++)
 		{
@@ -235,16 +236,16 @@ Unit* Squad::findTarget()
 			int maxRange = agent->getUnitType().seekRange();
 			if (agent->isAlive())
 			{
-				for(set<Unit*>::const_iterator i=Broodwar->enemy()->getUnits().begin();i!=Broodwar->enemy()->getUnits().end();i++)
+				for(set<Unit*>::const_iterator i = Broodwar->enemy()->getUnits().begin(); i != Broodwar->enemy()->getUnits().end(); i++)
 				{
 					if ((*i)->exists())
 					{
 						double dist = agent->getUnit()->getDistance((*i));
-				
-						//Check if enemy unit is cloaked
+						
+						//Check if enemy unit is cloaked/burrowed/invisible
 						if (dist <= maxRange)
-						{
-							if ((*i)->isCloaked())
+						{ 
+							if((*i)->isCloaked() || (*i)->isBurrowed() || !(*i)->isVisible())
 							{
 								Commander::getInstance()->handleCloakedEnemy((*i)->getTilePosition(), this);
 							}
@@ -582,9 +583,6 @@ void Squad::attack(TilePosition mGoal)
 
 	if (isActive())
 	{
-		if(this->isRush())
-			Broodwar->printf("Setting goal");
-
 		setGoal(mGoal);
 	}
 }
