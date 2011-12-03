@@ -1,12 +1,13 @@
 #include "ExplorationSquad.h"
 #include "UnitAgent.h"
 #include "ExplorationManager.h"
+#include "MalRilTil.h"
 
 ExplorationSquad::ExplorationSquad(int mId, string mName, int mPriority)
 {
 	this->id = mId;
 	this->type = EXPLORER;
-	this->moveType = AIR;
+	this->moveType = GROUND;
 	this->name = mName;
 	this->priority = mPriority;
 	activePriority = priority;
@@ -64,19 +65,26 @@ void ExplorationSquad::computeActions()
 	//All units dead, go back to inactive
 	if ((int)agents.size() == 0)
 	{
+		this->startLocations.clear();
+		TilePosition nGoal = ExplorationManager::getInstance()->getNextToExplore(this);
+		if (nGoal.x() >= 0)
+		{
+			this->goal = nGoal;
+			setMemberGoals(goal);
+		}
+		this->clearGoal();
 		active = false;
 		return;
 	}
 	
 	if (active)
 	{
-		if(timesSenseExploredBase == 3)
+		TilePosition nGoal;
+		if(this->timesSenseExploredBase > 100)
 		{
 			this->startLocations = Broodwar->getStartLocations();
+			this->timesSenseExploredBase = 0;
 		}
-
-		TilePosition nGoal;
-
 		if (activePriority != priority)
 		{
 			priority = activePriority;
@@ -84,20 +92,24 @@ void ExplorationSquad::computeActions()
 
 		if(startLocations.size() == 0)
 		{
-			timesSenseExploredBase = timesSenseExploredBase + 1; 
+			this->timesSenseExploredBase = this->timesSenseExploredBase + 1; 
 			nGoal = ExplorationManager::getInstance()->getNextToExplore(this);
 		}
 		else
 		{
-			Broodwar->printf("%d nr of startlocations: ", startLocations.size());
-			Broodwar->printf("Going to enemy base");
 			set<TilePosition>::iterator go;
 			go=startLocations.begin();
-			nGoal = *go;
 			startLocations.erase(go);
-			Broodwar->printf("%d nr of startlocations: ", startLocations.size());
+			if(*go != Broodwar->self()->getStartLocation())
+			{
+				MalRilTilData::enemyBasePosition = *go;
+				nGoal = *go;
+			}
+			else
+			{
+				nGoal = ExplorationManager::getInstance()->getNextToExplore(this);
+			}
 		}
-
 		if (nGoal.x() >= 0)
 		{
 			this->goal = nGoal;

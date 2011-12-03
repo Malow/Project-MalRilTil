@@ -1,0 +1,8 @@
+You want to update and get the latest version:
+Right click on github folder, press pull. Copy all the files from the source-folder in github-folder to the source-folder where you are working. And same same with MyScripts.
+
+You want to upload your changes:
+Copy all files you've changed into this folder at the correct place from your working folder (source-files and script files).
+Right click on folder -> Choose commit. Do not push!
+Right click on folder, choose Pull! It should now properly merge the online-version with your version.
+Now you right click on folder and choose push! And it will upload properly merged on the homepage.
