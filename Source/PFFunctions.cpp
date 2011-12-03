@@ -85,6 +85,8 @@ float PFFunctions::calcOwnUnitP(float d, Unit* unit, Unit* otherOwnUnit)
 	if (otherOwnUnit->isUnderStorm())
 	{
 		//Other unit under Psionic Storm. Keep distance.
+		Broodwar->printf("Other unit is standing under storm, keeping distance");
+		
 		if (d <= 64)
 		{
 			p = -20;

@@ -179,6 +179,46 @@ void Squad::computeActions()
 			clearGoal();
 			return;
 		}
+
+		//*************not yet tested**************
+		int r = 6;
+		for(int i = 0; i < (int)agents.size(); i++)
+		{
+			if(!agents.at(i)->isBuilding()) //check all non-buildings if they are...
+			{
+				if(agents.at(i)->getUnit()->isUnderStorm()) //...under storm
+				{
+					if(!(agents.at(i)->getUnitType() == UnitTypes::Terran_Siege_Tank_Siege_Mode)) //if the unit is NOT a siege tank in siege mode then...
+					{
+						Broodwar->printf("Unit under storm: %s ", agents.at(i)->getUnitType());
+						//...move it out of the storm
+						int distance = 1000;
+						int temp = 0;
+						Unit* closestUnit;
+						//check nearby units
+						for(set<Unit*>::const_iterator j = agents.at(i)->getUnit()->getUnitsInRadius(r).begin(); j != agents.at(i)->getUnit()->getUnitsInRadius(r).end(); j++)
+						{
+							if(!((*j)->getPlayer()->isEnemy(agents.at(i)->getUnit()->getPlayer()))) //if they are friendly...
+							{
+								if(!(*j)->isUnderStorm()) //...check if they are not under storm
+								{
+									temp = agents.at(i)->getUnit()->getDistance((*j)->getPosition());
+									if(temp < distance) //if so, get closest and...
+									{
+										distance = temp;
+										closestUnit = *j;
+									}
+								}
+							}
+						}
+						//...move to them
+						agents.at(i)->setGoal(closestUnit->getTilePosition());
+						Broodwar->printf("Moving it to closest allied unit not under storm: %s", closestUnit->getType().getName());
+					}
+				}
+			}
+		}
+		
 	}
 
 	if (active)
@@ -234,6 +274,7 @@ Unit* Squad::findTarget()
 		{
 			BaseAgent* agent = agents.at(i);
 			int maxRange = agent->getUnitType().seekRange();
+			Unit* unit = NULL;
 			if (agent->isAlive())
 			{
 				for(set<Unit*>::const_iterator i = Broodwar->enemy()->getUnits().begin(); i != Broodwar->enemy()->getUnits().end(); i++)
@@ -242,19 +283,29 @@ Unit* Squad::findTarget()
 					{
 						double dist = agent->getUnit()->getDistance((*i));
 						
-						//Check if enemy unit is cloaked/burrowed/invisible
 						if (dist <= maxRange)
 						{ 
+							//check if enemy unit is a high templar, if so, focus it
+							if((*i)->getType() == UnitTypes::Protoss_High_Templar)
+							{
+								return (*i);
+							}
+							else
+							{
+								unit = (*i);	
+							}
+							//Check if enemy unit is cloaked/burrowed/invisible
 							if((*i)->isCloaked() || (*i)->isBurrowed() || !(*i)->isVisible())
 							{
-								Commander::getInstance()->handleCloakedEnemy((*i)->getTilePosition(), this);
+								Commander::getInstance()->handleCloakedEnemy(*i, this);
 							}
 
-							return (*i);
+							//return (*i);
 						}	
 					}
 				}
 			}
+			return unit;
 		}
 
 		//Neutral units

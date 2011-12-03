@@ -115,7 +115,8 @@ public:
 	void assistWorker(BaseAgent* worker);
 
 	/** Called when own units are attacked by a cloaked enemy unit. */
-	void handleCloakedEnemy(TilePosition pos, Squad* squad);
+	//void handleCloakedEnemy(TilePosition pos, Squad* squad);
+	void handleCloakedEnemy(Unit* enemy, Squad* squad);
 
 	/** Checks if there are any removable obstacles nearby, i.e. minerals with less than 20 resources
 	 * left. */

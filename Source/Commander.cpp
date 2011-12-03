@@ -7,6 +7,7 @@
 #include "WorkerAgent.h"
 #include "Profiler.h"
 #include <algorithm>
+#include <iostream>
 
 #include "MalRilTil.h"
 
@@ -385,7 +386,8 @@ TilePosition Commander::getClosestEnemyBuilding(TilePosition start)
 }
 
 
-void Commander::handleCloakedEnemy(TilePosition pos, Squad* squad)
+//void Commander::handleCloakedEnemy(TilePosition pos, Squad* squad)
+void Commander::handleCloakedEnemy(Unit* enemy, Squad* squad)
 {
 	if (BuildPlanner::isProtoss())
 	{
@@ -393,36 +395,67 @@ void Commander::handleCloakedEnemy(TilePosition pos, Squad* squad)
 	}
 	if (BuildPlanner::isTerran())
 	{
-		Broodwar->printf("Invisible unit detected, responding..."); 
+		Broodwar->printf("Stealthed unit detected, responding..."); 
 		
-		vector<BaseAgent*> agents = AgentManager::getInstance()->getAgents();
-		if ((int)agents.size() > 0)
+		int canAttackAirCount = 0;
+		int canAttackGroundCount = 0;
+		bool attack = false;
+		vector<BaseAgent*> members = squad->getMembers();
+		//check if squad can attack the the type of enemy(air/ground)
+		if(enemy->getType().isFlyer()) //if stealthed enemy is air, squad must be able to attack it
 		{
-		
-			BaseAgent* Comsat = AgentManager::getInstance()->getAgent(0);
-			
-			//**
-			//squad->getHealthPct	hp
-			//squad->getMembers		
-			//squad->getStrength	styrka
-			//squad->isCloseTo(pos)	onödig? eftersom det var denna squad som träffade osynlig?
-			//squad->isGathered
-			//squad->isUnderAttack	onödig?
-			//squad->size			antal
-			//AA VS Anti-AA etc
-			//**
-			//Broodwar->printf("...decided to flee");
-			//om inte comsat station finns/har tillräckligt med energi ska en detector letas upp & användas
-			bool ok = Comsat->doScannerSweep(pos); //scan where invisible unit is
-			squad->attack(pos); //tell squad(the one which detected it) to attack it
-			Broodwar->printf("...scan used, attacking");
-			if(ok)
+			Broodwar->printf("Stealthed unit is air, checking if squad can attack air"); 
+			for(int i = 0; i < (int)members.size(); i++)
 			{
-				return;
+				if(members.at(i)->canAttack(UnitTypes::Terran_Wraith))
+				{
+					Broodwar->printf("Can attack air: %d", canAttackAirCount++); 
+				}
 			}
 		}
-		
-		
+		else //if stealthed enemy is ground, squad must be able to attack it
+		{
+			Broodwar->printf("Stealthed unit is ground, checking if squad can attack ground"); 
+			for(int i = 0; i < (int)members.size(); i++)
+			{
+				if(members.at(i)->canAttack(UnitTypes::Terran_Marine))
+				{
+					canAttackGroundCount++;
+					Broodwar->printf("Can attack ground: %d", canAttackAirCount++); 
+				}
+			}
+		}
+
+		if(canAttackAirCount > 5 || canAttackGroundCount > 5) //now check if we can see the stealthed unit
+		{
+			Broodwar->printf("squad have enough units to have a chance of killing the enemy");
+
+			//check if theres a nearby detector
+			Broodwar->printf("searching for nearby detector");
+			TilePosition closestDetector = AgentManager::getInstance()->getClosestDetector(enemy->getTilePosition());
+			int dist = (int)closestDetector.getDistance(enemy->getTilePosition());
+			if(dist > 7) //***detection range for turrets = 7, (detection)* range for science vessel = 10***
+			{
+				//if not, scan
+				Broodwar->printf("detector too far away, scanning...");
+				BaseAgent* scanAgent = AgentManager::getInstance()->getAgent(0);
+				bool scan = false;
+				scan = scanAgent->doScannerSweep(enemy->getTilePosition());
+				if(scan)
+				{
+					//if scanning was successful, then attack
+					squad->attack(enemy->getTilePosition());
+					attack = true;
+				}
+			}
+		}/*
+		if(!attack) //if scanning was not possible, flee to nearest detector
+		{
+			Broodwar->printf("Fleeing to nearest base");
+			//**kraschar**
+			squad->attack(AgentManager::getInstance()->getClosestBase(squad->getCenter())->getUnit()->getTilePosition());
+			
+		}*/
 	}
 	if (BuildPlanner::isZerg())
 	{
