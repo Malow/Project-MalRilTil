@@ -159,68 +159,23 @@ void Commander::computeActions()
 		//Check if there are units we need to repair.
 		checkRepairUnits();
 
-		//**scanner sweep on mineral fields(exps) not controlled by the bot(when having over 99 mana)**
+		//**scanner sweep on potential enemy locations (when having 200 energy)*********todo: add exp sites***************
 		vector<BaseAgent*> agents = AgentManager::getInstance()->getAgents();
-		//hämta ut alla geysers
-		/*
-		set<Unit*> geysers = Broodwar->getStaticGeysers();
-		set<Unit*>::iterator go;
-		go = geysers.begin();
-		Unit* nGoal = *go;
-		*/
 
-		
-		/*
-		for(int i = 0; i < (int)agents.size(); i++)
-		{
-			BaseAgent* agent = agents.at(i);
-			if(agent->isOfType(UnitTypes::Resource_Vespene_Geyser))
-			{
-				Broodwar->printf("geyser added");
-				geysers.push_back(agent);
-			}
-		}
-*/
-		BaseAgent* CC = AgentManager::getInstance()->getAgent(0);
-		int index = 0;
 		for(int i = 0; i < (int)agents.size(); i++)
 		{
 			BaseAgent* agent = agents.at(i);
 			if(agent->isAlive() && agent->isOfType(UnitTypes::Terran_Comsat_Station))
 			{
-				if(agent->getUnit()->getEnergy() >= 100)
+				if(agent->getUnit()->getEnergy() == 200)
 				{
-					//CC->doScannerSweep(agent->getUnit()->getTilePosition()); //**temp
-					//set<Unit*>::const_iterator geysers = Broodwar->getStaticGeysers().begin();
-					int index = 0;
-					TilePosition tp;
-
-					for(set<Unit*>::const_iterator i = Broodwar->getStaticGeysers().begin(); i != Broodwar->getStaticGeysers().end(); i++)
-					{
-						tp = (*i)->getTilePosition();
-						//Broodwar->printf("nr of geysers looped: %d", ++index);
-						//Broodwar->printf("pos of mineralpatch: %d, %d", tp.x(), tp.y());
-					}
-					CC->doScannerSweep(tp);
-					//CC->doScannerSweep(nGoal->getTilePosition());
-					//CC->doScannerSweep(geysers.at(index++)->getUnit()->getTilePosition());
+					Broodwar->printf("200 energy reached for a comsat station, scanning with it...");
+					TilePosition tp = MalRilTilData::enemyBasePosition;
+					agent->getUnit()->useTech(TechTypes::Scanner_Sweep, Position(tp));
+					Broodwar->printf("Scan used at: %i, %i", tp.x(), tp.y());
 				}
 			}
 		}
-
-					
-
-/*
-		std::set<Unit*> mineralFields = Broodwar->getStaticMinerals();
-		set<Unit*>::iterator go;
-		go = mineralFields.begin();
-		Unit* nGoal = *go;
-		mineralFields.erase(go);
-
-		BaseAgent* CC = AgentManager::getInstance()->getAgent(0);
-
-		CC->doScannerSweep(nGoal->getTilePosition());
-*/
 	}
 
 	//Check for units not belonging to a squad
@@ -395,12 +350,11 @@ void Commander::handleCloakedEnemy(Unit* enemy, Squad* squad)
 	}
 	if (BuildPlanner::isTerran())
 	{
-		Broodwar->printf("Stealthed unit detected, responding..."); 
-		
 		int canAttackAirCount = 0;
 		int canAttackGroundCount = 0;
-		bool attack = false;
+		int lowerLimit = 3;
 		vector<BaseAgent*> members = squad->getMembers();
+
 		//check if squad can attack the the type of enemy(air/ground)
 		if(enemy->getType().isFlyer()) //if stealthed enemy is air, squad must be able to attack it
 		{
@@ -409,7 +363,7 @@ void Commander::handleCloakedEnemy(Unit* enemy, Squad* squad)
 			{
 				if(members.at(i)->canAttack(UnitTypes::Terran_Wraith))
 				{
-					Broodwar->printf("Can attack air: %d", canAttackAirCount++); 
+					canAttackAirCount++; 
 				}
 			}
 		}
@@ -421,41 +375,22 @@ void Commander::handleCloakedEnemy(Unit* enemy, Squad* squad)
 				if(members.at(i)->canAttack(UnitTypes::Terran_Marine))
 				{
 					canAttackGroundCount++;
-					Broodwar->printf("Can attack ground: %d", canAttackAirCount++); 
 				}
 			}
 		}
 
-		if(canAttackAirCount > 5 || canAttackGroundCount > 5) //now check if we can see the stealthed unit
+		if(canAttackAirCount > lowerLimit || canAttackGroundCount > lowerLimit)
 		{
-			Broodwar->printf("squad have enough units to have a chance of killing the enemy");
+			Broodwar->printf("squad have enough units, attacking");
 
-			//check if theres a nearby detector
-			Broodwar->printf("searching for nearby detector");
-			TilePosition closestDetector = AgentManager::getInstance()->getClosestDetector(enemy->getTilePosition());
-			int dist = (int)closestDetector.getDistance(enemy->getTilePosition());
-			if(dist > 7) //***detection range for turrets = 7, (detection)* range for science vessel = 10***
-			{
-				//if not, scan
-				Broodwar->printf("detector too far away, scanning...");
-				BaseAgent* scanAgent = AgentManager::getInstance()->getAgent(0);
-				bool scan = false;
-				scan = scanAgent->doScannerSweep(enemy->getTilePosition());
-				if(scan)
-				{
-					//if scanning was successful, then attack
-					squad->attack(enemy->getTilePosition());
-					attack = true;
-				}
-			}
-		}/*
-		if(!attack) //if scanning was not possible, flee to nearest detector
+			BaseAgent* scanAgent = AgentManager::getInstance()->getAgent(0);
+			bool scan = scanAgent->doScannerSweep(enemy->getTilePosition());
+		}
+		else
 		{
-			Broodwar->printf("Fleeing to nearest base");
-			//**kraschar**
-			squad->attack(AgentManager::getInstance()->getClosestBase(squad->getCenter())->getUnit()->getTilePosition());
-			
-		}*/
+			Broodwar->printf("not enough units, fleeing ***NOT IMPLEMENTED***");
+			//****flee****
+		}
 	}
 	if (BuildPlanner::isZerg())
 	{
