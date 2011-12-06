@@ -8,6 +8,7 @@
 #include "Profiler.h"
 #include <algorithm>
 #include <iostream>
+#include "CoverMap.h"
 
 #include "MalRilTil.h"
 
@@ -27,6 +28,7 @@ Commander::Commander()
 	SquadFileReader sfr = SquadFileReader();
 	squads = sfr.readSquadList();
 	sortSquadList();
+	CoverMap::getInstance()->findExpansionSites(); // Saves all expansiont sites in MalRilTil.h (include enemy base)
 }
 
 Commander::~Commander()

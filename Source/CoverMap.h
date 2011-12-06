@@ -114,6 +114,9 @@ public:
 	/** Shows debug info on screen. */
 	void debug();
 
+	/** Saves all expansionsites in MalRilTil.h*/
+	void findExpansionSites();
+
 	/** Tile is buildable. */
 	static const int BUILDABLE = 1;
 	/** Tile is blocked and cannot be built on. */

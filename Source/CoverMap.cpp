@@ -5,6 +5,7 @@
 #include "BuildPlanner.h"
 #include "Commander.h"
 #include "Profiler.h"
+#include "MalRilTil.h"
 
 bool CoverMap::instanceFlag = false;
 CoverMap* CoverMap::instance = NULL;
@@ -874,6 +875,22 @@ void CoverMap::debug()
 			{
 				Broodwar->drawBox(CoordinateType::Map,x*32,y*32,x*32+31,y*32+31,Colors::Red,false);
 			}
+		}
+	}
+}
+void CoverMap::findExpansionSites()
+{
+	UnitType baseType = Broodwar->self()->getRace().getCenter();
+	double bestDist = 100000;
+	TilePosition bestPos = TilePosition(-1, -1);
+	
+	//Iterate through all base locations
+	for(set<BWTA::BaseLocation*>::const_iterator i=BWTA::getBaseLocations().begin(); i!= BWTA::getBaseLocations().end(); i++)
+	{
+		TilePosition pos = (*i)->getTilePosition();
+		if(pos != Broodwar->self()->getStartLocation())
+		{
+			MalRilTilData::expansionPositions.push_back(pos);
 		}
 	}
 }

@@ -43,6 +43,7 @@ void ExplorationSquad::assist(TilePosition mGoal)
 
 void ExplorationSquad::computeActions()
 {
+int cFrame = Broodwar->getFrameCount();
 	if (!active)
 	{
 		if (isFull())
@@ -57,6 +58,7 @@ void ExplorationSquad::computeActions()
 	{
 		if(!agents.at(i)->isAlive())
 		{
+			this->clearGoal();
 			agents.erase(agents.begin() + i);
 			i--;
 		}
@@ -65,14 +67,23 @@ void ExplorationSquad::computeActions()
 	//All units dead, go back to inactive
 	if ((int)agents.size() == 0)
 	{
-		this->startLocations.clear();
-		TilePosition nGoal = ExplorationManager::getInstance()->getNextToExplore(this);
-		if (nGoal.x() >= 0)
-		{
-			this->goal = nGoal;
-			setMemberGoals(goal);
-		}
-		this->clearGoal();
+		///////////////////////////////////////////////
+		if((int)agents.size() < 1)
+			{
+				this->startLocations.clear();
+				this->clearGoal();
+				this->timesSenseExploredBase = cFrame;
+				TilePosition nGoal = ExplorationManager::getInstance()->getNextToExplore(this);
+				if (nGoal.x() >= 0)
+				{
+					this->goal = nGoal;
+					setMemberGoals(this->goal);
+				}
+				//Broodwar->printf("My current goal are: %d, %d", this->goal.x(), this->goal.y());
+			}
+		////////////////////////////////////////////////////////////////////
+
+
 		active = false;
 		return;
 	}
@@ -80,10 +91,11 @@ void ExplorationSquad::computeActions()
 	if (active)
 	{
 		TilePosition nGoal;
-		if(this->timesSenseExploredBase > 100)
+		if(cFrame - this->timesSenseExploredBase > 5000)
 		{
+			//Broodwar->printf("Lets check out that base again");
 			this->startLocations = Broodwar->getStartLocations();
-			this->timesSenseExploredBase = 0;
+			this->timesSenseExploredBase = cFrame;
 		}
 		if (activePriority != priority)
 		{
@@ -92,7 +104,6 @@ void ExplorationSquad::computeActions()
 
 		if(startLocations.size() == 0)
 		{
-			this->timesSenseExploredBase = this->timesSenseExploredBase + 1; 
 			nGoal = ExplorationManager::getInstance()->getNextToExplore(this);
 		}
 		else
@@ -112,6 +123,7 @@ void ExplorationSquad::computeActions()
 		}
 		if (nGoal.x() >= 0)
 		{
+			//Broodwar->printf("New Goal: %d, %d", this->goal.x(), this->goal.y());
 			this->goal = nGoal;
 			setMemberGoals(goal);
 		}

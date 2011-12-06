@@ -2,6 +2,7 @@
 #define MALRILTIL_H
 
 #include "Commander.h"
+#include <vector>
 /*
 #include "AgentManager.h"
 #include "ExplorationManager.h"
@@ -16,7 +17,7 @@ class MalRilTilData
 {
 public:
 	static TilePosition enemyBasePosition;
-	
+	static vector<TilePosition> expansionPositions;
 	
 	
 };
