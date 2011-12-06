@@ -10,6 +10,7 @@ BaseAgent::BaseAgent()
 	squadID = -1;
 	type = UnitTypes::Unknown;
 	lastActionFrame = 0;
+	this->isRushing = false;
 	goal = TilePosition(-1, -1);
 }
 

@@ -15,6 +15,7 @@ Commander* Commander::instance = NULL;
 
 Commander::Commander()
 {
+	this->isRushing = false;
 	currentID = 1;	
 	currentState = DEFEND;
 
@@ -112,18 +113,39 @@ void Commander::computeActions()
 			}
 		}
 	}
-	
+
 	// Checking if rush squad should move out.
-	for (int i = 0; i < (int)squads.size(); i++)
+	if(!this->isRushing)
 	{
-		if(squads.at(i)->isRush() && squads.at(i)->isFull())
+		for (int i = 0; i < (int)squads.size(); i++)
 		{
-			TilePosition pos = MalRilTilData::enemyBasePosition;
-			squads.at(i)->forceActive();
-			squads.at(i)->attack(pos);
-			Broodwar->printf("Starting a rush-attack on %d, %d", pos.x(), pos.y());
+			if(squads.at(i)->isRush() && squads.at(i)->isFull())
+			{
+				TilePosition pos = MalRilTilData::enemyBasePosition;
+				squads.at(i)->forceActive();
+				squads.at(i)->attack(pos);
+				squads.at(i)->AttackMove(pos);
+				Broodwar->printf("Starting a rush-attack on %d, %d", pos.x(), pos.y());
+				this->isRushing = true;
+			}
 		}
 	}
+	else	// It's allready moving out, force-spam it to AMove there.
+	{
+		for (int i = 0; i < (int)squads.size(); i++)
+		{
+			if(squads.at(i)->isRush())
+			{
+				TilePosition pos = MalRilTilData::enemyBasePosition;
+				//squads.at(i)->forceActive();
+				//squads.at(i)->attack(pos);
+				squads.at(i)->AttackMove(pos);
+			}
+		}
+	}
+
+
+
 	
 	
 	//Check if there are obstacles we can remove. Needed for some

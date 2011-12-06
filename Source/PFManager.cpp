@@ -44,6 +44,10 @@ void PFManager::computeAttackingUnitActions(BaseAgent* agent, TilePosition goal,
 {
 	Unit* unit = agent->getUnit();
 
+	// Dont compute movement for units currently rushing (Amoveing) towards a goal.
+	if(agent->isRushing)
+		return;
+
 	if (!defensive || !forceMove)
 	{
 		//if (agent->getUnit()->isStartingAttack()) return;

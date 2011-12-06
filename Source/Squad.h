@@ -253,6 +253,10 @@ public:
 	/** Returns the closest start location to the specified position. */
 	TilePosition getClosestStartLocation(TilePosition pos);
 
+	/*  MaloW: Amove and move */
+	void AttackMove(TilePosition pos);
+	void Move(TilePosition pos);
+
 	/** Offensive Squad */
 	static const int OFFENSIVE = 0;
 	/** Defensive Squad */

@@ -1174,3 +1174,29 @@ bool Squad::isVisible(TilePosition pos)
 
 	return false;
 }
+
+
+
+/*  Amove and move by MaloW  */
+void Squad::AttackMove(TilePosition pos)
+{
+	for(int i = 0; i < this->agents.size(); i++)
+	{
+		
+		if(this->agents[i]->getUnit()->getDistance(Position(pos)) > 50)
+		{
+			this->agents[i]->isRushing = true;
+			this->agents[i]->getUnit()->attack(Position(pos));
+		}
+		else
+			this->agents[i]->isRushing = false;
+	}
+}
+
+void Squad::Move(TilePosition pos)
+{
+	for(int i = 0; i < this->agents.size(); i++)
+	{
+		this->agents[i]->getUnit()->move(Position(pos));
+	}
+}

@@ -28,6 +28,8 @@ protected:
 	bool bBlock;
 	string agentType;
 
+	
+
 public:
 	/** Default constructor. Not used. */
 	BaseAgent();
@@ -35,6 +37,9 @@ public:
 	BaseAgent(Unit* mUnit);
 	/** Destructor. */
 	~BaseAgent();
+
+	// MaloW: For disabling built in pathing for rush squads.
+	bool isRushing;
 
 	/** Called each update to issue orders. */
 	virtual void computeActions()
