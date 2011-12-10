@@ -59,6 +59,11 @@ void Commander::computeActions()
 	}
 	lastCallFrame = cFrame;
 
+	//**check if there's any nuke dots on the map**
+	//set<Position> nukePositions = Broodwar->getNukeDots();
+	//for(set<Position>::const_iterator i = Broodwar->getNukeDots().begin(); i != Broodwar->getNukeDots().end(); i++)
+	
+
 	if (currentState == DEFEND)
 	{
 		if (shallEngage())
@@ -183,9 +188,8 @@ void Commander::computeActions()
 		//Check if there are units we need to repair.
 		checkRepairUnits();
 
-		//**scanner sweep on potential enemy locations (when having 200 energy)*********todo: add exp sites***************
+		//scanner sweep on potential enemy locations(expansion sites) when having 200 energy
 		vector<BaseAgent*> agents = AgentManager::getInstance()->getAgents();
-
 		for(int i = 0; i < (int)agents.size(); i++)
 		{
 			BaseAgent* agent = agents.at(i);
@@ -194,9 +198,28 @@ void Commander::computeActions()
 				if(agent->getUnit()->getEnergy() == 200)
 				{
 					Broodwar->printf("200 energy reached for a comsat station, scanning with it...");
-					TilePosition tp = MalRilTilData::enemyBasePosition;
-					agent->getUnit()->useTech(TechTypes::Scanner_Sweep, Position(tp));
-					Broodwar->printf("Scan used at: %i, %i", tp.x(), tp.y());
+					vector<TilePosition> expSites = MalRilTilData::expansionPositions; //get expansion locations
+					static int expSiteNr = 0;
+					TilePosition scanPos = expSites.at(expSiteNr++ % expSites.size()); //next expansion site to scan
+					//check for every unit if its in range of scan
+					int scanRadius = 300; //in pixels?
+					for(int j = 0; j < (int)agents.size(); j++)
+					{
+						if(agents.at(j)->getUnit()->exists())
+						{
+							int dist = agents.at(j)->getUnit()->getDistance(Position(scanPos)); //distance(in pixels?) between unit and scan position
+							
+							if(dist < scanRadius) //unit is within scanning radius, check next site
+							{
+								Broodwar->printf("Owned unit within scanning radius, checking next site...");
+								scanPos = expSites.at(expSiteNr++ % expSites.size()); //get next expansion site
+							}
+						}
+					}
+
+					agent->getUnit()->useTech(TechTypes::Scanner_Sweep, Position(scanPos));
+					Broodwar->printf("Scan used at: %i, %i", scanPos.x(), scanPos.y());
+					
 				}
 			}
 		}

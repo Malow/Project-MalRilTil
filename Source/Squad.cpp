@@ -184,38 +184,41 @@ void Squad::computeActions()
 		int r = 6;
 		for(int i = 0; i < (int)agents.size(); i++)
 		{
-			if(!agents.at(i)->isBuilding()) //check all non-buildings if they are...
+			if(agents.at(i)->getUnit()->exists())
 			{
-				if(agents.at(i)->getUnit()->isUnderStorm()) //...under storm
+				if(!agents.at(i)->isBuilding()) //check all non-buildings if they are...
 				{
-					if(!(agents.at(i)->getUnitType() == UnitTypes::Terran_Siege_Tank_Siege_Mode)) //if the unit is NOT a siege tank in siege mode then...
+					if(agents.at(i)->getUnit()->isUnderStorm()) //...under storm
 					{
-						Broodwar->printf("Unit under storm: %s ", agents.at(i)->getUnitType());
-						/*
-						//...move it out of the storm
-						int distance = 1000;
-						int temp = 0;
-						Unit* closestUnit;
-						//check nearby units
-						for(set<Unit*>::const_iterator j = agents.at(i)->getUnit()->getUnitsInRadius(r).begin(); j != agents.at(i)->getUnit()->getUnitsInRadius(r).end(); j++)
+						if(!(agents.at(i)->getUnitType() == UnitTypes::Terran_Siege_Tank_Siege_Mode)) //if the unit is NOT a siege tank in siege mode then...
 						{
-							if(!((*j)->getPlayer()->isEnemy(agents.at(i)->getUnit()->getPlayer()))) //if they are friendly...
+							Broodwar->printf("Unit under storm: %s ", agents.at(i)->getUnitType());
+							/*
+							//...move it out of the storm
+							int distance = 1000;
+							int temp = 0;
+							Unit* closestUnit;
+							//check nearby units
+							for(set<Unit*>::const_iterator j = agents.at(i)->getUnit()->getUnitsInRadius(r).begin(); j != agents.at(i)->getUnit()->getUnitsInRadius(r).end(); j++)
 							{
-								if(!(*j)->isUnderStorm()) //...check if they are not under storm
+								if(!((*j)->getPlayer()->isEnemy(agents.at(i)->getUnit()->getPlayer()))) //if they are friendly...
 								{
-									temp = agents.at(i)->getUnit()->getDistance((*j)->getPosition());
-									if(temp < distance) //if so, get closest and...
+									if(!(*j)->isUnderStorm()) //...check if they are not under storm
 									{
-										distance = temp;
-										closestUnit = *j;
+										temp = agents.at(i)->getUnit()->getDistance((*j)->getPosition());
+										if(temp < distance) //if so, get closest and...
+										{
+											distance = temp;
+											closestUnit = *j;
+										}
 									}
 								}
 							}
+							//...move to them
+							agents.at(i)->setGoal(closestUnit->getTilePosition());
+							Broodwar->printf("Moving it to closest allied unit not under storm: %s", closestUnit->getType().getName());
+							*/
 						}
-						//...move to them
-						agents.at(i)->setGoal(closestUnit->getTilePosition());
-						Broodwar->printf("Moving it to closest allied unit not under storm: %s", closestUnit->getType().getName());
-						*/
 					}
 				}
 			}
