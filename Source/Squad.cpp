@@ -270,13 +270,49 @@ void Squad::checkAttack()
 	}
 }
 
+
+
 Unit* Squad::findTarget()
 {
 	try 
 	{
+		int energyOffset = 10; //**ev. ändra**
 		//Enemy units
 		Unit* otherUnit = NULL;
 		Unit* invisibleUnit = NULL;
+		Unit* transportUnit = NULL; //NULL if it has no units in it
+		Unit* detectorUnit = NULL; //only not NULL when squad has cloaked unit
+		Unit* spellCasterUnit = NULL; //only not NULL when caster has enough energy (for certain spells)
+		Unit* antiInfantryUnit = NULL; //siege tanks & reavers
+		Unit* medicUnit = NULL;
+		Unit* antiAirUnit = NULL; //only not NULL when squad has air units
+		Unit* antiGroundUnit = NULL;
+
+		bool squadHasCloakedUnit = false;
+		bool squadHasCaster = false;
+		bool squadCanAttackAir = false;
+		bool squadCanAttackGround = false;
+		vector<BaseAgent*> members = this->getMembers();
+		for(int i = 0; i < (int)members.size(); i++)
+		{
+			if(members.at(i)->getUnit()->isCloaked())
+			{
+				squadHasCloakedUnit = true;
+			}
+			else if(members.at(i)->getUnit()->getEnergy() > 0)
+			{
+				squadHasCaster = true;
+			}
+			if(members.at(i)->canAttack(UnitTypes::Terran_Marine))
+			{
+				squadCanAttackGround = true;
+			}
+			else if(members.at(i)->canAttack(UnitTypes::Terran_Wraith))
+			{
+				squadCanAttackAir = true;
+			}
+		}
+
 		for (int i = 0; i < (int)agents.size(); i++)
 		{
 			BaseAgent* agent = agents.at(i);
@@ -289,19 +325,199 @@ Unit* Squad::findTarget()
 					if ((*j)->exists())
 					{
 						double dist = agent->getUnit()->getDistance((*j));
-						
+						//finding handled here:
 						if(dist <= maxRange)
 						{ 
-							//check if enemy unit is a high templar, if so, focus it
-							if((*j)->getType() == UnitTypes::Protoss_High_Templar)
-							{
-								return (*j);
-							}
-							//Check if enemy unit is cloaked/burrowed ********AND not visible**************
-							else if((*j)->isCloaked() || (*j)->isBurrowed() || !(*j)->isVisible()) 
+						//ALL:
+							//invisible units //if(!(*j)->isVisible()) ************** 
+							if((*j)->isCloaked() || (*j)->isBurrowed() || !(*j)->isVisible()) 
 							{
 								invisibleUnit = (*j);
 							}
+						//PROTOSS:
+							//high templar(caster)
+							else if((*j)->getType() == UnitTypes::Protoss_High_Templar)
+							{
+								if(squadCanAttackGround)
+								{
+									if((*j)->getEnergy() > TechTypes::Psionic_Storm.energyUsed() - energyOffset) 
+									{
+										spellCasterUnit = (*j);
+									}
+								}
+							}
+							//shuttle(transporter)
+							else if((*j)->getType() == UnitTypes::Protoss_Shuttle)
+							{
+								if(squadCanAttackAir)
+								{
+									set<Unit*> loadedUnits = (*j)->getLoadedUnits();
+									if(loadedUnits.size() > 0)	//check if it has units in it
+									{
+										transportUnit = (*j);
+									}
+								}
+							}
+							//reaver(anti-infantry)
+							else if((*j)->getType() == UnitTypes::Protoss_Reaver)
+							{
+								if(squadCanAttackGround)
+								{
+									antiInfantryUnit = (*j); 
+								}
+							}
+							//arbiter(caster)
+							else if((*j)->getType() == UnitTypes::Protoss_Arbiter)
+							{
+								if(squadCanAttackAir)
+								{
+									if((*j)->getEnergy() > TechTypes::Stasis_Field.energyUsed() - energyOffset) 
+									{
+										spellCasterUnit = (*j);
+									}
+								}
+							}
+							//dark archon(caster)
+							else if((*j)->getType() == UnitTypes::Protoss_Dark_Archon)
+							{
+								if(squadCanAttackGround)
+								{
+									if(squadHasCaster)
+									{
+										spellCasterUnit = (*j);
+									}
+									else((*j)->getEnergy() > TechTypes::Maelstrom.energyUsed() - energyOffset)
+									;{ ///**********wtf???***************
+										spellCasterUnit = (*j);
+									}
+								}
+							}
+						//ZERG:
+							//overlord(transporter / detector)
+							else if((*j)->getType() == UnitTypes::Zerg_Overlord)
+							{
+								if(squadCanAttackAir)
+								{
+									set<Unit*> loadedUnits = (*j)->getLoadedUnits();
+									if(loadedUnits.size() > 0)	//check if it contains units
+									{
+										transportUnit = (*j);
+									}
+									else
+									{
+										if(squadHasCloakedUnit) //if not, check if squad has cloaked unit in it
+										{
+											detectorUnit = (*j);
+										}
+									}
+								}
+							}
+							//scourge(anti-air)
+							else if((*j)->getType() == UnitTypes::Zerg_Scourge)
+							{
+								if(squadCanAttackAir)
+								{
+									if(this->isAir())
+									{
+										antiAirUnit = (*j); 
+									}
+								}
+							}
+							//guardian(anti-ground)
+							else if((*j)->getType() == UnitTypes::Zerg_Guardian)
+							{
+								if(squadCanAttackAir)
+								{
+									if(this->isGround())
+									{
+										antiGroundUnit = (*j); 
+									}
+								}
+							}
+							//devourer(anti-air & debuffer - reduces cooldown & prevents cloaking)
+							else if((*j)->getType() == UnitTypes::Zerg_Devourer)
+							{
+								if(squadCanAttackAir)
+								{
+									if(this->isAir())
+									{
+										antiAirUnit = (*j); 
+									}
+								}
+							}
+							//defiler(caster)
+							else if((*j)->getType() == UnitTypes::Zerg_Defiler)
+							{
+								if(squadCanAttackGround)
+								{
+									if((*j)->getEnergy() > TechTypes::Dark_Swarm - energyOffset) 
+									{
+										spellCasterUnit = (*j); 
+									}
+								}
+							}
+						//TERRAN:
+							//dropship(transporter)
+							else if((*j)->getType() == UnitTypes::Terran_Dropship)
+							{
+								if(squadCanAttackAir)
+								{
+									set<Unit*> loadedUnits = (*j)->getLoadedUnits();
+									if(loadedUnits.size() > 0)	//check if it has units in it
+									{
+										transportUnit = (*j);
+									}
+								}
+							}
+							//medics(infantry healers)
+							else if((*j)->getType() == UnitTypes::Terran_Medic)
+							{
+								if(squadCanAttackGround)
+								{
+									medicUnit = (*j);
+								}
+							}
+							//goliath(anti-air)
+							else if((*j)->getType() == UnitTypes::Terran_Goliath)
+							{
+								if(squadCanAttackGround)
+								{
+									if(this->isAir())
+									{
+										antiAirUnit = (*j); 
+									}
+								}
+							}
+							//ghost(spellcaster)
+							else if((*j)->getType() == UnitTypes::Terran_Ghost)
+							{
+								if(squadCanAttackGround)
+								{
+									if((*j)->getEnergy() > TechTypes::Lockdown.energyUsed() - energyOffset) 
+									{
+										spellCasterUnit = (*j);
+									}
+								}
+							}
+							//science vessel(spellcaster / detector)
+							else if((*j)->getType() == UnitTypes::Terran_Science_Vessel)
+							{
+								if(squadCanAttackAir)
+								{
+									if((*j)->getEnergy() > TechTypes::Irradiate.energyUsed() - energyOffset) 
+									{
+										spellCasterUnit = (*j);
+									}
+									else 
+									{
+										if(squadHasCloakedUnit)
+										{
+											detectorUnit = (*j);
+										}
+									}
+								}
+							}
+						//OTHER UNITS:
 							else
 							{
 								otherUnit = (*j);	
@@ -313,16 +529,57 @@ Unit* Squad::findTarget()
 			}
 			//return otherUnit;
 		}
-		if(invisibleUnit != NULL)
+
+		//priority handled here:
+		
+		//transportUnit(with units in it)
+		if(transportUnit != NULL)
+		{
+			return transportUnit;
+		}
+		//spellcasters(with enough mana)
+		else if(spellCasterUnit != NULL)
+		{
+			return spellCasterUnit;
+		}
+		//detector(if squad has invisible units)
+		else if(detectorUnit != NULL)
+		{
+			return detectorUnit;
+		}
+		//anti air units(when squad has air units)
+		else if(antiAirUnit != NULL)
+		{
+			return antiAirUnit;
+		}
+		//anti-infantry units (siege tanks & reavers)(if squad has infantry units)
+		else if(antiInfantryUnit != NULL)
+		{
+			return antiInfantryUnit;
+		}
+		//anti-ground units
+		else if(antiGroundUnit != NULL)
+		{
+			return antiGroundUnit;
+		}
+		//medics
+		else if(medicUnit != NULL)
+		{
+			return medicUnit;
+		}
+		//invisible units
+		else if(invisibleUnit != NULL)
 		{
 			Commander::getInstance()->handleCloakedEnemy(invisibleUnit, this);
 			
 			return invisibleUnit;
 		}
+		//other units if no prioritized units are found
 		else if(otherUnit != NULL)
 		{
 			return otherUnit;
 		}
+
 
 		//Neutral units
 		/*for (int i = 0; i < (int)agents.size(); i++)
@@ -1196,7 +1453,7 @@ bool Squad::isVisible(TilePosition pos)
 /*  Amove and move by MaloW  */
 void Squad::AttackMove(TilePosition pos)
 {
-	for(int i = 0; i < this->agents.size(); i++)
+	for(int i = 0; i < (int)this->agents.size(); i++)
 	{
 		
 		if(this->agents[i]->getUnit()->getDistance(Position(pos)) > 50)
@@ -1211,7 +1468,7 @@ void Squad::AttackMove(TilePosition pos)
 
 void Squad::Move(TilePosition pos)
 {
-	for(int i = 0; i < this->agents.size(); i++)
+	for(int i = 0; i < (int)this->agents.size(); i++)
 	{
 		this->agents[i]->getUnit()->move(Position(pos));
 	}
