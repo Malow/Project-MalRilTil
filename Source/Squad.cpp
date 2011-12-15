@@ -330,7 +330,8 @@ Unit* Squad::findTarget()
 						{ 
 						//ALL:
 							//invisible units //if(!(*j)->isVisible()) ************** 
-							if((*j)->isCloaked() || (*j)->isBurrowed() || !(*j)->isVisible()) 
+							//if(!(*j)->isVisible(members.at(0)->getUnit()->getPlayer()))
+							if((*j)->isCloaked() || (*j)->isBurrowed() || !(*j)->isVisible())
 							{
 								invisibleUnit = (*j);
 							}
@@ -405,7 +406,7 @@ Unit* Squad::findTarget()
 									}
 									else
 									{
-										if(squadHasCloakedUnit) //if not, check if squad has cloaked unit in it
+										if(squadHasCloakedUnit) //if not, check if squad has cloaked unit in it and...
 										{
 											detectorUnit = (*j);
 										}
@@ -527,7 +528,6 @@ Unit* Squad::findTarget()
 					}
 				}
 			}
-			//return otherUnit;
 		}
 
 		//priority handled here:

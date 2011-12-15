@@ -63,7 +63,6 @@ void Commander::computeActions()
 	//set<Position> nukePositions = Broodwar->getNukeDots();
 	//for(set<Position>::const_iterator i = Broodwar->getNukeDots().begin(); i != Broodwar->getNukeDots().end(); i++)
 	
-
 	if (currentState == DEFEND)
 	{
 		if (shallEngage())
@@ -202,12 +201,12 @@ void Commander::computeActions()
 					static int expSiteNr = 0;
 					TilePosition scanPos = expSites.at(expSiteNr++ % expSites.size()); //next expansion site to scan
 					//check for every unit if its in range of scan
-					int scanRadius = 300; //in pixels?
+					int scanRadius = 12 * 32; //in pixels (tank range = 12)
 					for(int j = 0; j < (int)agents.size(); j++)
 					{
 						if(agents.at(j)->getUnit()->exists())
 						{
-							int dist = agents.at(j)->getUnit()->getDistance(Position(scanPos)); //distance(in pixels?) between unit and scan position
+							int dist = agents.at(j)->getUnit()->getDistance(Position(scanPos)); //distance(in pixels) between unit and scan position
 							
 							if(dist < scanRadius) //unit is within scanning radius, check next site
 							{
@@ -216,10 +215,9 @@ void Commander::computeActions()
 							}
 						}
 					}
-
 					agent->getUnit()->useTech(TechTypes::Scanner_Sweep, Position(scanPos));
-					Broodwar->printf("Scan used at: %i, %i", scanPos.x(), scanPos.y());
-					
+					Broodwar->printf("Scan used at: %d, %d", scanPos.x(), scanPos.y());
+					//agent->doScannerSweep(scanPos); 
 				}
 			}
 		}
@@ -389,7 +387,7 @@ TilePosition Commander::getClosestEnemyBuilding(TilePosition start)
 
 
 //void Commander::handleCloakedEnemy(TilePosition pos, Squad* squad)
-void Commander::handleCloakedEnemy(Unit* enemy, Squad* squad)
+void Commander::handleCloakedEnemy(Unit* enemyUnit, Squad* squad)
 {
 	if (BuildPlanner::isProtoss())
 	{
@@ -403,9 +401,9 @@ void Commander::handleCloakedEnemy(Unit* enemy, Squad* squad)
 		vector<BaseAgent*> members = squad->getMembers();
 
 		//check if squad can attack the the type of enemy(air/ground)
-		if(enemy->getType().isFlyer()) //if stealthed enemy is air, squad must be able to attack it
+		if(enemyUnit->getType().isFlyer()) //if stealthed enemy is air, squad must be able to attack it
 		{
-			Broodwar->printf("Stealthed unit is air, checking if squad can attack air"); 
+			//Broodwar->printf("Stealthed unit is air, checking if squad can attack air"); 
 			for(int i = 0; i < (int)members.size(); i++)
 			{
 				if(members.at(i)->canAttack(UnitTypes::Terran_Wraith))
@@ -416,7 +414,7 @@ void Commander::handleCloakedEnemy(Unit* enemy, Squad* squad)
 		}
 		else //if stealthed enemy is ground, squad must be able to attack it
 		{
-			Broodwar->printf("Stealthed unit is ground, checking if squad can attack ground"); 
+			//Broodwar->printf("Stealthed unit is ground, checking if squad can attack ground"); 
 			for(int i = 0; i < (int)members.size(); i++)
 			{
 				if(members.at(i)->canAttack(UnitTypes::Terran_Marine))
@@ -428,14 +426,19 @@ void Commander::handleCloakedEnemy(Unit* enemy, Squad* squad)
 
 		if(canAttackAirCount > lowerLimit || canAttackGroundCount > lowerLimit)
 		{
-			Broodwar->printf("squad have enough units, attacking");
+			//Broodwar->printf("squad have enough of right units, attacking");
 
 			BaseAgent* scanAgent = AgentManager::getInstance()->getAgent(0);
-			bool scan = scanAgent->doScannerSweep(enemy->getTilePosition());
+			//use scan IF enemy it not detected
+			if(!enemyUnit->isDetected())
+			{
+				Broodwar->printf("(DBG): Invisible unit is not detected, scanning...");
+				bool scan = scanAgent->doScannerSweep(enemyUnit->getTilePosition());
+			}
 		}
 		else
 		{
-			Broodwar->printf("not enough units, fleeing ***NOT IMPLEMENTED***");
+			Broodwar->printf("fleeing ***NOT IMPLEMENTED***");
 			//****flee****
 		}
 	}
