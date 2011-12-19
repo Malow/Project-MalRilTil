@@ -31,9 +31,9 @@ bool MarineAgent::isNeededInBunker()
 				for (int i = 0; i < (int)agents.size(); i++)
 				{
 					if (agents.at(i)->isAlive() && agents.at(i)->isOfType(UnitTypes::Terran_Bunker))
-				{
+					{
 						if (agents.at(i)->getUnit()->getLoadedUnits().size() < 4)
-				{
+						{
 							unit->rightClick(agents.at(i)->getUnit());
 							return true;
 						}

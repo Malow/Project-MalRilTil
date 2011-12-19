@@ -142,7 +142,7 @@ public:
 	bool needUnit(UnitType type);
 
 	/** Adds an agent to this Squad. */
-	bool addMember(BaseAgent* agent);
+	bool addMember(BaseAgent* agent, bool exception = false);
 
 	/** Returns the members of this Squad. */
 	vector<BaseAgent*> getMembers();

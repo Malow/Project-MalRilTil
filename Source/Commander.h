@@ -59,6 +59,7 @@ protected:
 	static const int DEFEND = 0;
 	static const int ATTACK = 1;
 	bool isRushing;
+	int RushBuncher;
 
 	Commander();
 

@@ -18,8 +18,7 @@ Priority=2
 ActivePriority=1000
 OffenseType=Optional
 <setup>
-Unit=Terran_Marine:14
-Unit=Terran_Medic:6
+Unit=Terran_Marine:10
 <end>
 
 

@@ -662,8 +662,41 @@ vector<BaseAgent*> Squad::getMembers()
 	return agents;
 }
 
-bool Squad::addMember(BaseAgent* agent)
+bool Squad::addMember(BaseAgent* agent, bool exception)
 {
+	if(exception)
+	{
+		bool found = false;
+		for (int i = 0; i < (int)setup.size(); i++)
+		{
+			if(setup.at(i).equals(agent->getUnitType()))
+			{
+				// Force joining it.
+				agents.push_back(agent);
+				agent->setSquadID(id);
+				setup.at(i).current++;
+				
+				if (goal.x() >= 0)
+				{
+					agent->setGoal(goal);
+				}
+				found = true;
+			}
+		}
+		if(!found)
+		{
+			// Force joining it.
+			agents.push_back(agent);
+			agent->setSquadID(id);
+			
+			if (goal.x() >= 0)
+			{
+				agent->setGoal(goal);
+			}
+		}
+		return true;
+	}
+
 	if (priority >= 1000)
 	{
 		//Check if prio is above Inactive squad.
