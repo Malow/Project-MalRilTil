@@ -180,6 +180,7 @@ void Squad::computeActions()
 			return;
 		}
 
+
 		//*************not yet tested**************
 		int r = 6;
 		for(int i = 0; i < (int)agents.size(); i++)
@@ -281,11 +282,11 @@ Unit* Squad::findTarget()
 		Unit* otherUnit = NULL;
 		Unit* invisibleUnit = NULL;
 		Unit* transportUnit = NULL; //NULL if it has no units in it
-		Unit* detectorUnit = NULL; //only not NULL when squad has cloaked unit
-		Unit* spellCasterUnit = NULL; //only not NULL when caster has enough energy (for certain spells)
+		Unit* detectorUnit = NULL; //not NULL only when squad has cloaked unit
+		Unit* spellCasterUnit = NULL; //not NULL only when caster has enough energy (for certain spells)
 		Unit* antiInfantryUnit = NULL; //siege tanks & reavers
 		Unit* medicUnit = NULL;
-		Unit* antiAirUnit = NULL; //only not NULL when squad has air units
+		Unit* antiAirUnit = NULL; //not NULL only when squad has air units
 		Unit* antiGroundUnit = NULL;
 
 		bool squadHasCloakedUnit = false;
@@ -329,11 +330,12 @@ Unit* Squad::findTarget()
 						if(dist <= maxRange)
 						{ 
 						//ALL:
-							//invisible units //if(!(*j)->isVisible()) ************** 
-							//if(!(*j)->isVisible(members.at(0)->getUnit()->getPlayer()))
 							if((*j)->isCloaked() || (*j)->isBurrowed() || !(*j)->isVisible())
 							{
-								invisibleUnit = (*j);
+								if(!(*j)->isDetected())
+								{
+									invisibleUnit = (*j);
+								}
 							}
 						//PROTOSS:
 							//high templar(caster)

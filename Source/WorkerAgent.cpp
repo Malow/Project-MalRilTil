@@ -178,6 +178,36 @@ void WorkerAgent::computeActions()
 		PFManager::getInstance()->computeAttackingUnitActions(this, goal, false);
 		return;
 	}
+
+	//check if workers are being attacked ***NOT TESTED*** ***ev. hantera att fly/bygga turrets***
+	int radius = 10;
+	if(this->isUnderAttack())
+	{
+		for(set<Unit*>::const_iterator i = this->getUnit()->getUnitsInRadius(radius).begin(); i != this->getUnit()->getUnitsInRadius(radius).end(); i++)
+		{
+			if((*i)->exists())
+			{
+				if((*i)->getPlayer() == Broodwar->enemy()) //find enemy
+				{
+					if((*i)->isCloaked() || (*i)->isBurrowed() || !(*i)->isVisible())
+					{
+						if(!(*i)->isDetected())
+						{
+							Broodwar->printf("(DBG) enemy hitting SCVs is invisible AND not detected, scanning...");
+							AgentManager::getInstance()->getAgent(0)->doScannerSweep((*i)->getTilePosition());
+						}
+					}
+				}
+				else //order our units to attack
+				{
+					(*i)->attack(Position(this->getUnit()->getTilePosition()));
+				}
+
+			}
+		}
+	}
+
+
 	//Check if workers are too far away from a base when attacking
 	if (currentState == ATTACKING)
 	{
