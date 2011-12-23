@@ -17,6 +17,7 @@ Commander* Commander::instance = NULL;
 Commander::Commander()
 {
 	this->isRushing = false;
+	this->RushBuncher = 0;
 	currentID = 1;	
 	currentState = DEFEND;
 
@@ -96,7 +97,6 @@ void Commander::computeActions()
 				TilePosition pos = MalRilTilData::enemyBasePosition;
 				squads.at(i)->forceActive();
 				squads.at(i)->attack(pos);
-				//Broodwar->printf("ATTACKING WITH RUSH LOL COMPUTE AC");
 			}
 			if (squads.at(i)->isOffensive())
 			{
@@ -120,6 +120,37 @@ void Commander::computeActions()
 		}
 	}
 
+
+	// Checking if additional marines should be added to the bunker squad.
+	for (int u = 0; u < (int)squads.size(); u++)
+	{
+		Squad* sq = squads.at(u);
+		if(sq->isBunkerDefend() && sq->getSize() < 4)
+		{
+			int added = sq->getSize();
+			for (int i = 0; i < (int)squads.size(); i++)
+			{
+				Squad* sq2 = squads.at(i);
+				if (sq2->isOffensive() || sq2->isDefensive() || (sq2->isRush() && !this->isRushing))
+				{
+					for (int u = 0; u < sq2->size() && added < 4; u++)
+					{
+						if (sq2->hasUnits(UnitTypes::Terran_Marine, 1))
+						{
+							BaseAgent* ma = sq2->removeMember(UnitTypes::Terran_Marine);
+							if (ma != NULL)
+							{
+								added++;
+								sq->addMember(ma);
+								ma->clearGoal();
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
 	// Checking if rush squad should move out.
 	if(!this->isRushing)
 	{
@@ -128,11 +159,50 @@ void Commander::computeActions()
 			if(squads.at(i)->isRush() && squads.at(i)->isFull())
 			{
 				TilePosition pos = MalRilTilData::enemyBasePosition;
+				
+
+				// Unload all marines in bunkers.
+				vector<BaseAgent*> agents = AgentManager::getInstance()->getAgents();
+				for (int z = 0; z < (int)agents.size(); z++)
+				{
+					if (agents.at(z)->isAlive() && agents.at(z)->isOfType(UnitTypes::Terran_Bunker))
+					{
+						if (agents.at(z)->getUnit()->getLoadedUnits().size() > 0)
+						{
+							agents.at(z)->getUnit()->unloadAll();
+						}
+					}
+				}
+				
+				// Add them to rush squad.
+				for (int u = 0; u < (int)squads.size(); u++)
+				{
+					Squad* sq = squads.at(u);
+					if(sq->isBunkerDefend())
+					{
+						int size = sq->size();
+						for (int q = 0; q < size; q++)
+						{
+							if (sq->hasUnits(UnitTypes::Terran_Marine, 1))
+							{
+								BaseAgent* ma = sq->removeMember(UnitTypes::Terran_Marine);
+								if (ma != NULL)
+								{
+									squads.at(i)->addMember(ma, true);
+									ma->clearGoal();
+								}
+							}
+						}
+					}
+				}
+
+
 				squads.at(i)->forceActive();
 				squads.at(i)->attack(pos);
 				squads.at(i)->AttackMove(pos);
 				Broodwar->printf("Starting a rush-attack on %d, %d", pos.x(), pos.y());
 				this->isRushing = true;
+				this->RushBuncher = Broodwar->getFrameCount();
 			}
 		}
 	}
@@ -140,12 +210,19 @@ void Commander::computeActions()
 	{
 		for (int i = 0; i < (int)squads.size(); i++)
 		{
-			if(squads.at(i)->isRush())
+			if(squads.at(i)->isRush() && squads.at(i)->size() > 0)
 			{
-				TilePosition pos = MalRilTilData::enemyBasePosition;
-				//squads.at(i)->forceActive();
-				//squads.at(i)->attack(pos);
-				squads.at(i)->AttackMove(pos);
+				// Every now and again tell all the squad members to move to squad position to bunch them up so they dont run in a line.
+				if(Broodwar->getFrameCount() - RushBuncher > 500)
+				{
+					squads.at(i)->AttackMove(TilePosition(squads.at(i)->getMembers().at(0)->getUnit()->getPosition()));
+					RushBuncher = Broodwar->getFrameCount();
+				}
+				else if(Broodwar->getFrameCount() - RushBuncher > 75)
+				{
+					TilePosition pos = MalRilTilData::enemyBasePosition;
+					squads.at(i)->AttackMove(pos);
+				}
 			}
 		}
 	}
