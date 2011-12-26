@@ -26,38 +26,6 @@ CommandCenterAgent::CommandCenterAgent(Unit* mUnit)
 
 void CommandCenterAgent::computeActions()
 {
-	//check if command center is being attacked	***NOT TESTED***
-	if(this->isUnderAttack())
-	{
-		Broodwar->printf("Command center under attack, attacking with nearby units...");
-		int radius = 10;
-		for(set<Unit*>::const_iterator i = this->getUnit()->getUnitsInRadius(radius).begin(); i != this->getUnit()->getUnitsInRadius(radius).end(); i++)
-		{
-			if((*i)->exists())
-			{
-				if((*i)->getPlayer() == Broodwar->enemy()) //find enemy
-				{
-					if(!(*i)->getType().isFlyer())
-					{
-						if((*i)->isCloaked() || (*i)->isBurrowed() || !(*i)->isVisible())
-						{
-							if(!(*i)->isDetected())
-							{
-								Broodwar->printf("(DBG) enemy hitting CC is invisible AND not detected, scanning...");
-								AgentManager::getInstance()->getAgent(0)->doScannerSweep((*i)->getTilePosition());
-							}
-						}
-					}
-				}
-				else //order our units to attack
-				{
-					(*i)->attack(Position(this->getUnit()->getTilePosition()));
-				}
-
-			}
-		}
-	}
-
 	if (!hasSentWorkers)
 	{
 		if (!unit->isBeingConstructed())

@@ -241,7 +241,7 @@ bool BaseAgent::doScannerSweep(TilePosition pos)
 	{
 		Broodwar->printf("Could not scan, insufficient energy");
 	}
-	if(!hasComsat)
+	else if(!hasComsat)
 	{
 		Broodwar->printf("Could not scan, no comsat station");
 	}
