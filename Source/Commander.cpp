@@ -60,6 +60,13 @@ void Commander::computeActions()
 	}
 	lastCallFrame = cFrame;
 
+	//****TEMP****
+	static bool temp = false;
+	if(temp == false)
+	{
+		Broodwar->setLocalSpeed(0);
+		temp = true;
+	}
 	//**check if there's any nuke dots on the map**
 	//set<Position> nukePositions = Broodwar->getNukeDots();
 	//for(set<Position>::const_iterator i = Broodwar->getNukeDots().begin(); i != Broodwar->getNukeDots().end(); i++)
@@ -263,41 +270,6 @@ void Commander::computeActions()
 
 		//Check if there are units we need to repair.
 		checkRepairUnits();
-
-		//scanner sweep on potential enemy locations(expansion sites) when having 200 energy
-		vector<BaseAgent*> agents = AgentManager::getInstance()->getAgents();
-		for(int i = 0; i < (int)agents.size(); i++)
-		{
-			BaseAgent* agent = agents.at(i);
-			if(agent->isAlive() && agent->isOfType(UnitTypes::Terran_Comsat_Station))
-			{
-				if(agent->getUnit()->getEnergy() == 200)
-				{
-					Broodwar->printf("200 energy reached for a comsat station, scanning with it...");
-					vector<TilePosition> expSites = MalRilTilData::expansionPositions; //get expansion locations
-					static int expSiteNr = 0;
-					TilePosition scanPos = expSites.at(expSiteNr++ % expSites.size()); //next expansion site to scan
-					//check for every unit if its in range of scan
-					int scanRadius = 12 * 32; //in pixels (tank range = 12)
-					for(int j = 0; j < (int)agents.size(); j++)
-					{
-						if(agents.at(j)->getUnit()->exists())
-						{
-							int dist = agents.at(j)->getUnit()->getDistance(Position(scanPos)); //distance(in pixels) between unit and scan position
-							
-							if(dist < scanRadius) //unit is within scanning radius, check next site
-							{
-								Broodwar->printf("Owned unit within scanning radius, checking next site...");
-								scanPos = expSites.at(expSiteNr++ % expSites.size()); //get next expansion site
-							}
-						}
-					}
-					agent->getUnit()->useTech(TechTypes::Scanner_Sweep, Position(scanPos));
-					Broodwar->printf("Scan used at: %d, %d", scanPos.x(), scanPos.y());
-					//agent->doScannerSweep(scanPos); 
-				}
-			}
-		}
 	}
 
 	//Check for units not belonging to a squad

@@ -172,42 +172,52 @@ void WorkerAgent::debug_showGoal()
 
 void WorkerAgent::computeActions()
 {
-	if (squadID != -1)
+	//if (squadID != -1)
 	{
 		//Worker is in a squad
 		PFManager::getInstance()->computeAttackingUnitActions(this, goal, false);
-		return;
+		//return;
 	}
 
-	//check if workers are being attacked ***NOT TESTED*** ***ev. hantera att fly/bygga turrets***
-	int radius = 10;
-	if(this->isUnderAttack())
+	//check if worker is being attacked ***ev. hantera att fly/bygga turrets***
+	BaseAgent* workerAgent = AgentManager::getInstance()->getAgent(UnitTypes::Terran_SCV);
+	if(workerAgent->getUnit()->isUnderAttack())
 	{
-		for(set<Unit*>::const_iterator i = this->getUnit()->getUnitsInRadius(radius).begin(); i != this->getUnit()->getUnitsInRadius(radius).end(); i++)
+		Broodwar->printf("(DBG) workerunit is under attack");
+		int radius = 5 * 32; //in pixels
+		for(set<Unit*>::const_iterator i = workerAgent->getUnit()->getUnitsInRadius(radius).begin(); i != workerAgent->getUnit()->getUnitsInRadius(radius).end(); i++)
 		{
-			if((*i)->exists())
+			if((*i)->exists() && !(*i)->getType().isBuilding()) //check if it exists & exclude buildings
 			{
-				if((*i)->getPlayer() == Broodwar->enemy()) //find enemy
+				if((*i)->getPlayer() == Broodwar->enemy()) //enemy
 				{
-					if((*i)->isCloaked() || (*i)->isBurrowed() || !(*i)->isVisible())
+					if(!(*i)->getType().isFlyer()) //exclude/handle flying units ***(handled by turrets/fleeing(IMPL.)***
 					{
-						if(!(*i)->isDetected())
+						Broodwar->printf("(DBG) enemy is a: %s", (*i)->getType().getName().c_str());
+						if((*i)->isCloaked() || (*i)->isBurrowed() || !(*i)->isVisible())
 						{
-							Broodwar->printf("(DBG) enemy hitting SCVs is invisible AND not detected, scanning...");
-							AgentManager::getInstance()->getAgent(0)->doScannerSweep((*i)->getTilePosition());
+							if(!(*i)->isDetected())
+							{
+								Broodwar->printf("(DBG) enemy hitting workers is invisible & not detected, scanning...");
+								//AgentManager::getInstance()->getAgent(UnitTypes::Terran_Comsat_Station)->doScannerSweep((*i)->getTilePosition());
+								AgentManager::getInstance()->getAgent(0)->doScannerSweep((*i)->getTilePosition());
+							}
 						}
 					}
+					/*else
+					{
+						//***handle fleeing here***
+					}*/
 				}
-				else //order our units to attack
+				else //order our units to assist the unit under attack
 				{
-					(*i)->attack(Position(this->getUnit()->getTilePosition()));
+					Broodwar->printf("(DBG) attacking with nearby unit: %s", (*i)->getType().getName().c_str());
+					setState(ATTACKING);
+					(*i)->attack(Position(workerAgent->getUnit()->getTilePosition()));
 				}
-
 			}
 		}
 	}
-
-
 	//Check if workers are too far away from a base when attacking
 	if (currentState == ATTACKING)
 	{

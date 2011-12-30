@@ -7,6 +7,8 @@
 #include "ResourceManager.h"
 #include "ExplorationManager.h"
 
+#include "MalRilTil.h"
+
 StructureAgent::StructureAgent()
 {
 
@@ -118,6 +120,49 @@ void StructureAgent::computeActions()
 {
 	if (isAlive())
 	{
+		//check if we have buildings that need to lift
+		if(!unit->isBeingConstructed())
+		{	
+			if(unit->canIssueCommand(UnitCommand::lift(unit)))
+			{
+				
+				Broodwar->printf("(DBG) can lift");
+				int threshold = (int)(unit->getType().maxHitPoints() * 0.25);
+				if(unit->getHitPoints() < threshold)
+				{
+					
+					Broodwar->printf("(DBG) less than half health");
+					if(unit->getRemainingTrainTime() < (5 * 15)) //**15 = frames
+					{
+						Broodwar->printf("(DBG) remaining build time");
+						unit->cancelTrain();
+						unit->lift();
+					}
+				}
+			}
+		}
+		//check if we have buildings that can land
+		if(unit->isLifted())
+		{
+			int radius = 10 * 32; //in pixels
+			bool canLand = true;
+			for(set<Unit*>::iterator i = unit->getUnitsInRadius(radius).begin(); i != unit->getUnitsInRadius(radius).end(); i++)
+			{
+				if((*i)->getPlayer() == Broodwar->enemy())
+				{
+					canLand = false;
+					break;
+				}
+			}
+			if(canLand)
+			{
+				unit->land(unit->getTilePosition());
+			}
+			else
+			{
+				Broodwar->printf("(DBG) won't land: enemies nearby");
+			}
+		}
 
 		if (!unit->isIdle())
 		{
@@ -161,23 +206,58 @@ void StructureAgent::computeActions()
 				}
 			}
 
-			//If Comsat Station, check if we need to scan for enemy bases
+			
+			//scanner sweep on potential enemy locations(expansion sites) when having 200 energy
+			if(isOfType(UnitTypes::Terran_Comsat_Station))
+			{
+				if(unit->getEnergy() == 200)
+				{
+					Broodwar->printf("200 energy reached for a comsat station, scanning with it...");
+					vector<TilePosition> expSites = MalRilTilData::expansionPositions; //get expansion locations
+					static int expSiteNr = 0;
+					TilePosition scanPos = expSites.at(expSiteNr-- % expSites.size()); //next expansion site to scan
+					
+					//check for every unit if its in range of scan
+					vector<BaseAgent*> agents = AgentManager::getInstance()->getAgents();
+					int scanRadius = 12 * 32; //in pixels (tank range = 12)
+					for(int j = 0; j < (int)agents.size(); j++)
+					{
+						if(agents.at(j)->getUnit()->exists())
+						{
+							int dist = agents.at(j)->getUnit()->getDistance(Position(scanPos)); //distance(in pixels) between unit and scan position
+							
+							if(dist < scanRadius) //unit is within scanning radius, check next site
+							{
+								Broodwar->printf("Owned unit within scanning radius, checking next site...");
+								scanPos = expSites.at(expSiteNr-- % expSites.size()); //get next expansion site
+							}
+						}
+					}
+					unit->useTech(TechTypes::Scanner_Sweep, Position(scanPos));
+					Broodwar->printf("Scan used at: %d, %d", scanPos.x(), scanPos.y());
+				}
+			}
+
+			/*If Comsat Station, check if we need to scan for enemy bases
 			if (isOfType(UnitTypes::Terran_Comsat_Station))
 			{
 				TilePosition p = getNextScanLocation();
 				if (p.x() != -1)
 				{
 					if (unit->getEnergy() >= 50)
-				{
+					{
 						//Broodwar->printf("Scanning (%d,%d)", p.x(), p.y());
 						if (unit->useTech(TechTypes::Scanner_Sweep, Position(p)))
-				{
+						{
 							hasScanned.push_back(p);
 							return;
 						}
 					}
 				}
-			}
+			}*/
+
+
+			
 		}
 
 		if (!unit->isBeingConstructed() && unit->isIdle() && getUnit()->getType().canProduce())
