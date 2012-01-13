@@ -277,7 +277,7 @@ Unit* Squad::findTarget()
 {
 	try 
 	{
-		int energyOffset = 10; //**ev. ändra**
+		int energyOffset = 10; //it's preferred to kill the enemy spellcaster before it has enough energy to cast a potent spell
 		//Enemy units
 		Unit* otherUnit = NULL;
 		Unit* invisibleUnit = NULL;
@@ -532,52 +532,42 @@ Unit* Squad::findTarget()
 			}
 		}
 
-		//priority handled here:
-		
-		//transportUnit(with units in it)
-		if(transportUnit != NULL)
+		//actual priority handled here:
+		if(transportUnit != NULL) //transportUnit(with units in it)
 		{
 			return transportUnit;
 		}
-		//spellcasters(with enough mana)
-		else if(spellCasterUnit != NULL)
+		else if(spellCasterUnit != NULL) //spellcasters(with enough mana)
 		{
 			return spellCasterUnit;
 		}
-		//detector(if squad has invisible units)
-		else if(detectorUnit != NULL)
-		{
-			return detectorUnit;
-		}
-		//anti air units(when squad has air units)
-		else if(antiAirUnit != NULL)
+		else if(antiAirUnit != NULL) //anti-air units(when squad has air units)
 		{
 			return antiAirUnit;
 		}
-		//anti-infantry units (siege tanks & reavers)(if squad has infantry units)
-		else if(antiInfantryUnit != NULL)
+		else if(detectorUnit != NULL) //detector(if squad has invisible units)
+		{
+			return detectorUnit;
+		}
+		else if(antiInfantryUnit != NULL) //anti air units(when squad has air units)
 		{
 			return antiInfantryUnit;
 		}
-		//anti-ground units
-		else if(antiGroundUnit != NULL)
+		else if(antiGroundUnit != NULL) //anti-ground units
 		{
 			return antiGroundUnit;
 		}
-		//medics
-		else if(medicUnit != NULL)
+		else if(medicUnit != NULL) //medics(healers)
 		{
 			return medicUnit;
 		}
-		//invisible units
-		else if(invisibleUnit != NULL)
+		else if(invisibleUnit != NULL) //invisible units
 		{
 			Commander::getInstance()->handleCloakedEnemy(invisibleUnit, this);
 			
 			return invisibleUnit;
 		}
-		//other units if no prioritized units are found
-		else if(otherUnit != NULL)
+		else if(otherUnit != NULL) //other units if no prioritized units are found
 		{
 			return otherUnit;
 		}

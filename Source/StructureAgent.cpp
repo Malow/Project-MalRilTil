@@ -120,50 +120,6 @@ void StructureAgent::computeActions()
 {
 	if (isAlive())
 	{
-		//check if we have buildings that need to lift
-		if(!unit->isBeingConstructed())
-		{	
-			if(unit->canIssueCommand(UnitCommand::lift(unit)))
-			{
-				
-				Broodwar->printf("(DBG) can lift");
-				int threshold = (int)(unit->getType().maxHitPoints() * 0.25);
-				if(unit->getHitPoints() < threshold)
-				{
-					
-					Broodwar->printf("(DBG) less than half health");
-					if(unit->getRemainingTrainTime() < (5 * 15)) //**15 = frames
-					{
-						Broodwar->printf("(DBG) remaining build time");
-						unit->cancelTrain();
-						unit->lift();
-					}
-				}
-			}
-		}
-		//check if we have buildings that can land
-		if(unit->isLifted())
-		{
-			int radius = 10 * 32; //in pixels
-			bool canLand = true;
-			for(set<Unit*>::iterator i = unit->getUnitsInRadius(radius).begin(); i != unit->getUnitsInRadius(radius).end(); i++)
-			{
-				if((*i)->getPlayer() == Broodwar->enemy())
-				{
-					canLand = false;
-					break;
-				}
-			}
-			if(canLand)
-			{
-				unit->land(unit->getTilePosition());
-			}
-			else
-			{
-				Broodwar->printf("(DBG) won't land: enemies nearby");
-			}
-		}
-
 		if (!unit->isIdle())
 		{
 			return;

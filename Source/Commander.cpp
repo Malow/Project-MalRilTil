@@ -485,11 +485,6 @@ void Commander::handleCloakedEnemy(Unit* enemyUnit, Squad* squad)
 				bool scan = scanAgent->doScannerSweep(enemyUnit->getTilePosition());
 			}
 		}
-		else
-		{
-			Broodwar->printf("fleeing ***NOT IMPLEMENTED***");
-			//****flee****
-		}
 	}
 	if (BuildPlanner::isZerg())
 	{

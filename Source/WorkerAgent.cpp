@@ -172,18 +172,18 @@ void WorkerAgent::debug_showGoal()
 
 void WorkerAgent::computeActions()
 {
-	//if (squadID != -1)
+	if (squadID != -1)
 	{
 		//Worker is in a squad
 		PFManager::getInstance()->computeAttackingUnitActions(this, goal, false);
-		//return;
+		return;
 	}
-
-	//check if worker is being attacked ***ev. hantera att fly/bygga turrets***
+	
+	//check if worker is being attacked
 	BaseAgent* workerAgent = AgentManager::getInstance()->getAgent(UnitTypes::Terran_SCV);
 	if(workerAgent->getUnit()->isUnderAttack())
 	{
-		Broodwar->printf("(DBG) workerunit is under attack");
+		//Broodwar->printf("(DBG) workerunit is under attack");
 		int radius = 5 * 32; //in pixels
 		for(set<Unit*>::const_iterator i = workerAgent->getUnit()->getUnitsInRadius(radius).begin(); i != workerAgent->getUnit()->getUnitsInRadius(radius).end(); i++)
 		{
@@ -193,31 +193,28 @@ void WorkerAgent::computeActions()
 				{
 					if(!(*i)->getType().isFlyer()) //exclude/handle flying units ***(handled by turrets/fleeing(IMPL.)***
 					{
-						Broodwar->printf("(DBG) enemy is a: %s", (*i)->getType().getName().c_str());
+						//Broodwar->printf("(DBG) enemy is a: %s", (*i)->getType().getName().c_str());
 						if((*i)->isCloaked() || (*i)->isBurrowed() || !(*i)->isVisible())
 						{
 							if(!(*i)->isDetected())
 							{
-								Broodwar->printf("(DBG) enemy hitting workers is invisible & not detected, scanning...");
+								//Broodwar->printf("(DBG) enemy hitting workers is invisible & not detected, scanning...");
 								//AgentManager::getInstance()->getAgent(UnitTypes::Terran_Comsat_Station)->doScannerSweep((*i)->getTilePosition());
 								AgentManager::getInstance()->getAgent(0)->doScannerSweep((*i)->getTilePosition());
 							}
 						}
 					}
-					/*else
-					{
-						//***handle fleeing here***
-					}*/
 				}
 				else //order our units to assist the unit under attack
 				{
-					Broodwar->printf("(DBG) attacking with nearby unit: %s", (*i)->getType().getName().c_str());
+					//Broodwar->printf("(DBG) attacking with nearby unit: %s", (*i)->getType().getName().c_str());
 					setState(ATTACKING);
 					(*i)->attack(Position(workerAgent->getUnit()->getTilePosition()));
 				}
 			}
 		}
 	}
+
 	//Check if workers are too far away from a base when attacking
 	if (currentState == ATTACKING)
 	{
