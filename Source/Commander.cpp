@@ -70,6 +70,15 @@ void Commander::computeActions()
 	//**check if there's any nuke dots on the map**
 	//set<Position> nukePositions = Broodwar->getNukeDots();
 	//for(set<Position>::const_iterator i = Broodwar->getNukeDots().begin(); i != Broodwar->getNukeDots().end(); i++)
+
+	// Writing GLHF at start.
+	static bool glhf = true;
+	if(glhf)
+	{
+		Broodwar->sendText("gl hf");
+		glhf = false;
+	}
+
 	
 	if (currentState == DEFEND)
 	{

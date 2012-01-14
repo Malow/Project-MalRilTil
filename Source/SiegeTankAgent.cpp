@@ -17,20 +17,40 @@ SiegeTankAgent::SiegeTankAgent(Unit* mUnit)
 void SiegeTankAgent::computeActions()
 {
 	bool defensive = false;
+
+	bool staySieged = false;
+	int distance = this->getUnit()->getDistance(Position(this->getGoal()));
+	if(distance > 300)
+	{
+		if(unit->isSieged())
+		{
+			unit->unsiege();
+		}
+	}
+	else if(distance < 200)
+	{
+		if(!unit->isSieged())
+		{
+			unit->siege();
+		}
+		staySieged = true;
+	}
+
 	if(this->enemyGroundUnitsWithinRange(400) > 3)
 	{
 		if(!unit->isSieged())
 		{
 			unit->siege();
-			//Broodwar->printf("Siege'ing");
 		}
 	}
 	else if(this->enemyGroundUnitsWithinRange(500) == 0)
 	{
-		if(unit->isSieged())
+		if(!staySieged)
 		{
-			unit->unsiege();
-			//Broodwar->printf("UnSiege'ing");
+			if(unit->isSieged())
+			{
+				unit->unsiege();
+			}
 		}
 	}
 	PFManager::getInstance()->computeAttackingUnitActions(this, goal, defensive);
