@@ -16,6 +16,7 @@ BuildPlanner::BuildPlanner()
 	BuildOrderFileReader br = BuildOrderFileReader();
 	buildOrder = br.readBuildOrder();
 	lastCallFrame = Broodwar->getFrameCount();
+	lastCommandCenterTime = Broodwar->getFrameCount();
 }
 
 BuildPlanner::~BuildPlanner()
@@ -119,7 +120,7 @@ bool BuildPlanner::hasResourcesLeft()
 		}
 	}
 
-	if (totalMineralsLeft <= 1000)
+	if (totalMineralsLeft <= 8000)
 	{
 		return false;
 	}
@@ -185,7 +186,7 @@ bool BuildPlanner::shallBuildSupply()
 	//3. Check if we need supplies
 	int supplyTotal = Broodwar->self()->supplyTotal() / 2;
 	int supplyUsed = Broodwar->self()->supplyUsed() / 2;
-	if (supplyTotal - supplyUsed > 8)
+	if (supplyTotal - supplyUsed > 10)
 	{
 		return false;
 	}
@@ -599,7 +600,8 @@ void BuildPlanner::addBuildingFirst(UnitType type)
 
 void BuildPlanner::expand(UnitType commandCenterUnit)
 {
-	if (containsType(commandCenterUnit))
+
+	if (containsType(commandCenterUnit) || Broodwar->getFrameCount() - lastCommandCenterTime < 2000)
 	{
 		return;
 	}
@@ -610,7 +612,8 @@ void BuildPlanner::expand(UnitType commandCenterUnit)
 		//No expansion site found.
 		return;
 	}
-
+	Broodwar->printf("And now im here!");
+	lastCommandCenterTime = Broodwar->getFrameCount();
 	buildOrder.insert(buildOrder.begin(), commandCenterUnit);
 }
 

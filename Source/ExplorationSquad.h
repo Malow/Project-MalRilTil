@@ -12,12 +12,19 @@ using namespace std;
  *
  * Author: Johan Hagelback (johan.hagelback@gmail.com)
  */
+enum{
+	SCOUT_BASE,
+	SCOUT_EXPANSIONS
+};
+
 class ExplorationSquad : public Squad {
 
 private:
-	bool enemyBaseExplored;
-	set<TilePosition> startLocations;
+	set<TilePosition> startLocationsTemp;
+	vector<TilePosition> startLocations;
+	vector<TilePosition> startLocationsExplored;
 	int timesSenseExploredBase;
+	int explorationState;
 	
 public:
 	/** Constructor. See Squad.h for more details. */
@@ -52,6 +59,16 @@ public:
 
 	/** Prints some info about the squad. */
 	void printInfo();
+
+private:
+	/** Checks if we have explored that base already **/
+	bool checkExplored(TilePosition);
+
+	/** Checks if enemy base have been explored**/
+	bool enemyBaseExplored();
+
+	/** Checks if scout is at goal if so add to explored**/
+	bool checkIfExplored(TilePosition);
 };
 
 #endif

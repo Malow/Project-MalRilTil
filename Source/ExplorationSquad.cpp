@@ -13,12 +13,13 @@ ExplorationSquad::ExplorationSquad(int mId, string mName, int mPriority)
 	activePriority = priority;
 	active = false;
 	required = false;
-	goal = Broodwar->self()->getStartLocation();
 	goalSetFrame = 0;
 	currentState = STATE_NOT_SET;
-	this->startLocations = Broodwar->getStartLocations();
-	this->enemyBaseExplored = false;
-	this->timesSenseExploredBase = 0;
+	startLocationsTemp = Broodwar->getStartLocations();
+	copy(startLocationsTemp.begin(), startLocationsTemp.end(), inserter(startLocations, startLocations.begin()));
+	explorationState = SCOUT_BASE;
+	startLocationsExplored.push_back(Broodwar->self()->getStartLocation());
+	MalRilTilData::enemyBasePosition = TilePosition(0,0);
 }
 
 bool ExplorationSquad::isActive()
@@ -67,59 +68,32 @@ int cFrame = Broodwar->getFrameCount();
 	//All units dead, go back to inactive
 	if ((int)agents.size() == 0)
 	{
-		///////////////////////////////////////////////
-		if((int)agents.size() < 1)
-			{
-				this->startLocations.clear();
-				this->clearGoal();
-				this->timesSenseExploredBase = cFrame;
-				TilePosition nGoal = ExplorationManager::getInstance()->getNextToExplore(this);
-				if (nGoal.x() >= 0)
-				{
-					this->goal = nGoal;
-					setMemberGoals(this->goal);
-				}
-				//Broodwar->printf("My current goal are: %d, %d", this->goal.x(), this->goal.y());
-			}
-		////////////////////////////////////////////////////////////////////
-
-
 		active = false;
 		return;
 	}
 	
 	if (active)
 	{
-		TilePosition nGoal;
-		if(cFrame - this->timesSenseExploredBase > 5000)
+		if(explorationState == SCOUT_BASE)
 		{
-			//Broodwar->printf("Lets check out that base again");
-			this->startLocations = Broodwar->getStartLocations();
-			this->timesSenseExploredBase = cFrame;
-		}
-		if (activePriority != priority)
-		{
-			priority = activePriority;
+			if(ExplorationManager::getInstance()->buildingsSpotted())
+			{
+				MalRilTilData::enemyBasePosition = agents.at(0)->getGoal();
+				//Broodwar->printf("Going into expansion scout");
+				//Broodwar->printf("Enemy base is at: %d, %d", MalRilTilData::enemyBasePosition.x(), MalRilTilData::enemyBasePosition.y());
+				explorationState = SCOUT_EXPANSIONS;
+				this->clearGoal();
+			}
 		}
 
-		if(startLocations.size() == 0)
+		TilePosition nGoal;
+		if(explorationState == SCOUT_BASE)
+		{
+			nGoal = this->getNextStartLocation();
+		}
+		if(explorationState == SCOUT_EXPANSIONS)
 		{
 			nGoal = ExplorationManager::getInstance()->getNextToExplore(this);
-		}
-		else
-		{
-			set<TilePosition>::iterator go;
-			go=startLocations.begin();
-			startLocations.erase(go);
-			if(*go != Broodwar->self()->getStartLocation())
-			{
-				MalRilTilData::enemyBasePosition = *go;
-				nGoal = *go;
-			}
-			else
-			{
-				nGoal = ExplorationManager::getInstance()->getNextToExplore(this);
-			}
 		}
 		if (nGoal.x() >= 0)
 		{
@@ -128,6 +102,34 @@ int cFrame = Broodwar->getFrameCount();
 			setMemberGoals(goal);
 		}
 	}
+}
+bool ExplorationSquad::checkIfExplored(TilePosition nGoal)
+{
+	double dist = agents.at(0)->getUnit()->getTilePosition().getDistance(nGoal);
+	if(dist <= 10)
+	{
+		startLocationsExplored.push_back(nGoal);
+		Broodwar->printf("CloseEnuff");
+		return true;
+	}
+	return false;
+}
+bool ExplorationSquad::checkExplored(TilePosition nGoal)
+{
+	for(int i = 0; i < startLocationsExplored.size(); i++)
+	{
+		if(nGoal == startLocationsExplored.at(i))
+			return true;
+	}
+	return false;
+}
+
+bool ExplorationSquad::enemyBaseExplored()
+{
+	if(MalRilTilData::enemyBasePosition != TilePosition(0,0))
+		return true;
+	else
+		return false;
 }
 
 void ExplorationSquad::printInfo()

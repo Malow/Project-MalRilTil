@@ -42,6 +42,8 @@ protected:
 
 	int lastCallFrame;
 
+	int lastCommandCenterTime;
+
 public:
 	/** Destructor. */
 	~BuildPlanner();
