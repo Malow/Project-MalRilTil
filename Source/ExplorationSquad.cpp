@@ -68,12 +68,16 @@ int cFrame = Broodwar->getFrameCount();
 	//All units dead, go back to inactive
 	if ((int)agents.size() == 0)
 	{
+		
+		this->clearGoal();
+
 		active = false;
 		return;
 	}
 	
 	if (active)
 	{
+		TilePosition nGoal;
 		if(explorationState == SCOUT_BASE)
 		{
 			if(ExplorationManager::getInstance()->buildingsSpotted())
@@ -83,10 +87,11 @@ int cFrame = Broodwar->getFrameCount();
 				//Broodwar->printf("Enemy base is at: %d, %d", MalRilTilData::enemyBasePosition.x(), MalRilTilData::enemyBasePosition.y());
 				explorationState = SCOUT_EXPANSIONS;
 				this->clearGoal();
+				nGoal = ExplorationManager::getInstance()->getNextToExplore(this);
+				this->goal = nGoal;
+				setMemberGoals(goal);
 			}
-		}
-
-		TilePosition nGoal;
+		}		
 		if(explorationState == SCOUT_BASE)
 		{
 			nGoal = this->getNextStartLocation();
