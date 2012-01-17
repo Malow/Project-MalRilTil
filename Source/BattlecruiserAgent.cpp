@@ -16,8 +16,6 @@ BattlecruiserAgent::BattlecruiserAgent(Unit* mUnit)
 
 void BattlecruiserAgent::computeActions()
 {
-	// sniping Tanks, Goliaths, Turrets and Battlecruisers,
-
 	//check if yamato gun has been researched
 	if(Broodwar->self()->hasResearched(TechTypes::Yamato_Gun))
 	{
@@ -25,32 +23,59 @@ void BattlecruiserAgent::computeActions()
 		if(unit->getEnergy() >= TechTypes::Yamato_Gun.energyUsed())
 		{
 			//get units in range of yamato gun
-			Unit* tankUnit = NULL;
+			Unit* valkyrieUnit = NULL;
+			Unit* scienceVesselUnit = NULL;
+			Unit* siegeTankUnit = NULL;
 			int radius = 10 * 32; //in pixels (10 = range of spell, 32 = pixels/rangeunit)
+			bool yamatoGunUsed = false;
 			for(set<Unit*>::iterator i = unit->getUnitsInRadius(radius).begin(); i != unit->getUnitsInRadius(radius).end(); i++)
 			{
 				if((*i)->exists())
 				{
 					if((*i)->getPlayer() == Broodwar->enemy()) //check if unit is enemy
 					{
-						//prioritize use of yamato gun on other battlecruiser with more than 260 hitpoints(damage of yamato gun)
+						//Note: battlecruisers are only used against a terran enemy
+						//prioritize use of yamato gun on units with over 260 hitpoints(damage of yamato gun)(with some exceptions)
 						if((*i)->getType() == UnitTypes::Terran_Battlecruiser && (*i)->getHitPoints() > 260)
 						{
 							unit->useTech(TechTypes::Yamato_Gun, (*i));
-						}//otherwise use it to snipe tanks with full health(both modes)
-						else if((*i)->getType() == UnitTypes::Terran_Siege_Tank_Siege_Mode || (*i)->getType() == UnitTypes::Terran_Siege_Tank_Tank_Mode) 
+							Broodwar->printf("(DBG) yamato gun used on battlecruiser");
+							yamatoGunUsed = true;
+							break;
+						}
+						else if((*i)->getType() == UnitTypes::Terran_Valkyrie && (*i)->getHitPoints() == (*i)->getType().maxHitPoints())
 						{
-							if((*i)->getHitPoints() == (*i)->getType().maxHitPoints())
-							{
-								tankUnit = (*i);
-							}
+							valkyrieUnit= (*i);
+						}
+						else if((*i)->getType() == UnitTypes::Terran_Science_Vessel && (*i)->getHitPoints() == (*i)->getType().maxHitPoints())
+						{
+							scienceVesselUnit = (*i);
+						}
+						else if(((*i)->getType() == UnitTypes::Terran_Siege_Tank_Siege_Mode || (*i)->getType() == UnitTypes::Terran_Siege_Tank_Tank_Mode) && ((*i)->getHitPoints() == (*i)->getType().maxHitPoints())) 
+						{
+							siegeTankUnit = (*i);
 						}
 					}
 				}
 			}
-			if(tankUnit != NULL)
+			//if not used on a battlecruise, use yamato gun on other units(if found)
+			if(!yamatoGunUsed)
 			{
-				unit->useTech(TechTypes::Yamato_Gun, tankUnit);
+				if(scienceVesselUnit != NULL)
+				{
+					unit->useTech(TechTypes::Yamato_Gun, scienceVesselUnit);
+					Broodwar->printf("(DBG) yamato gun used on science vessel");
+				}
+				else if(valkyrieUnit != NULL)
+				{
+					unit->useTech(TechTypes::Yamato_Gun, valkyrieUnit);
+					Broodwar->printf("(DBG) yamato gun used on valkyrie");
+				}
+				else if(siegeTankUnit != NULL)
+				{
+					unit->useTech(TechTypes::Yamato_Gun, siegeTankUnit);
+					Broodwar->printf("(DBG) yamato gun used on siege tank");
+				}
 			}
 		}
 	}

@@ -15,8 +15,6 @@ ScienceVesselAgent::ScienceVesselAgent(Unit* mUnit)
 
 void ScienceVesselAgent::computeActions()
 {
-	//prioritize offensive spells
-	bool usedOffensiveSpell = false;
 	if(Broodwar->enemy()->getRace() == Races::Protoss) 	//check if enemy is protoss
 	{
 		//check if EMP shockwave has been researched
@@ -26,6 +24,7 @@ void ScienceVesselAgent::computeActions()
 			if(unit->getEnergy() >= TechTypes::EMP_Shockwave.energyUsed())
 			{
 				int radius = 8 * 32; //in pixels (8 = range of spell, 32 = pixels/radiusunit)
+				bool EMPUsed = false;
 				Unit* archonUnit = NULL;
 				//get surrounding units in range of spell
 				for(set<Unit*>::iterator i = unit->getUnitsInRadius(radius).begin(); i != unit->getUnitsInRadius(radius).end(); i++)
@@ -34,14 +33,15 @@ void ScienceVesselAgent::computeActions()
 					{
 						if((*i)->getPlayer() == Broodwar->enemy()) //check if it's one of our enemies' units
 						{
-							//use EMP on first arbiter/high templar/dark archon seen as a threat(has enough energy to cast a spell)
+							//use EMP on first arbiter/high templar/dark archon seen as a threat(has enough energy to cast a (dangerous)spell)
 							if((*i)->getType() == UnitTypes::Protoss_Arbiter)
 							{
 								if((*i)->getEnergy() >= TechTypes::Stasis_Field.energyUsed())
 								{
 									unit->useTech(TechTypes::EMP_Shockwave, (*i));
-									usedOffensiveSpell = true;
-									break; //********
+									Broodwar->printf("(DBG) EMP shockwave used on arbiter");
+									EMPUsed = true;
+									break;
 								}
 							}
 							else if((*i)->getType() == UnitTypes::Protoss_High_Templar)
@@ -49,8 +49,9 @@ void ScienceVesselAgent::computeActions()
 								if((*i)->getEnergy() >= TechTypes::Psionic_Storm.energyUsed())
 								{
 									unit->useTech(TechTypes::EMP_Shockwave, (*i));
-									usedOffensiveSpell = true;
-									break; //********
+									Broodwar->printf("(DBG) EMP shockwave used on high templar");
+									EMPUsed = true;
+									break;
 								}
 							}
 							else if((*i)->getType() == UnitTypes::Protoss_Dark_Archon)
@@ -58,8 +59,9 @@ void ScienceVesselAgent::computeActions()
 								if((*i)->getEnergy() >= TechTypes::Feedback.energyUsed()) 
 								{
 									unit->useTech(TechTypes::EMP_Shockwave, (*i));
-									usedOffensiveSpell = true;
-									break; //********
+									Broodwar->printf("(DBG) EMP shockwave used dark archon");
+									EMPUsed = true;
+									break;
 								}
 							}
 							//if none found, use on archon with full shield
@@ -70,10 +72,10 @@ void ScienceVesselAgent::computeActions()
 						}
 					}
 				}
-				if(archonUnit != NULL)
+				if(archonUnit != NULL && !EMPUsed)
 				{
 					unit->useTech(TechTypes::EMP_Shockwave, archonUnit);
-					usedOffensiveSpell = true;
+					Broodwar->printf("(DBG) EMP shockwave used on archon");
 				}
 			}
 		}
@@ -95,11 +97,11 @@ void ScienceVesselAgent::computeActions()
 						if((*i)->getPlayer() == Broodwar->enemy()) //check if it's one of our enemies' units
 						{
 							//use irradiate on first found defiler seen as a threat(has enough energy to cast spells & is not already afflicted by irradiate)
-							if((*i)->getType() == UnitTypes::Zerg_Defiler && (*i)->getEnergy() >= TechTypes::Dark_Swarm && !(*i)->isIrradiated())
+							if((*i)->getType() == UnitTypes::Zerg_Defiler && (*i)->getEnergy() >= TechTypes::Dark_Swarm.energyUsed() && !(*i)->isIrradiated())
 							{
 								unit->useTech(TechTypes::Irradiate, (*i)); 
-								usedOffensiveSpell = true;
-								break; //***********
+								Broodwar->printf("(DBG) irradiate used on defiler");
+								break;
 							}
 						}
 					}
@@ -108,37 +110,35 @@ void ScienceVesselAgent::computeActions()
 		}
 	}
 	//Note: Terran not handled, since we will be using battlecruiser instead of science vessel.
-	//if an offensive spell was not used, check if a unit need a defensive matrix
-	if(!usedOffensiveSpell)
+	
+	//no need to check if defensive matrix has been researched since it doesnt need to be researched
+	//check if science vessel has enough energy for defensive matrix
+	if(unit->getEnergy() >= TechTypes::Defensive_Matrix.energyUsed())
 	{
-		//no need to check if defensive matrix has been researched since it needs no research
-		//check if science vessel has enough energy for defensive matrix
-		if(unit->getEnergy() >= TechTypes::Defensive_Matrix.energyUsed())
+		//get surrounding units in range of spell
+		int radius = 10 * 32; //in pixels (10 = range of spell, 32 = pixels/radiusunit)
+		for(set<Unit*>::iterator i = unit->getUnitsInRadius(radius).begin(); i != unit->getUnitsInRadius(radius).end(); i++)
 		{
-			//get surrounding units in range of spell
-			int radius = 10 * 32; //in pixels (10 = range of spell, 32 = pixels/radiusunit)
-			for(set<Unit*>::iterator i = unit->getUnitsInRadius(radius).begin(); i != unit->getUnitsInRadius(radius).end(); i++)
+			if((*i)->exists())
 			{
-				if((*i)->exists())
+				if((*i)->getPlayer() == Broodwar->self()) //check if it's one of our units
 				{
-					if((*i)->getPlayer() == Broodwar->self()) //check if it's one of our units
+					//check if unit is important(in our case, siege tanks(both modes), and other science vessels)
+					if((*i)->getType() == UnitTypes::Terran_Science_Vessel || (*i)->getType() == UnitTypes::Terran_Siege_Tank_Tank_Mode || (*i)->getType() == UnitTypes::Terran_Siege_Tank_Siege_Mode)
 					{
-						//check if unit is important(in our case, siege tanks(both modes), and other science vessels)
-						if((*i)->getType() == UnitTypes::Terran_Science_Vessel || (*i)->getType() == UnitTypes::Terran_Siege_Tank_Tank_Mode || (*i)->getType() == UnitTypes::Terran_Siege_Tank_Siege_Mode)
+						//use on first found unit in need of a defensive matrix(low health(<50%), under attack & not already defense matrixed)
+						if((*i)->isUnderAttack() && ((*i)->getHitPoints() < ((*i)->getType().maxHitPoints() / 2)) && !(*i)->isDefenseMatrixed())
 						{
-							//use on first found unit in need of a defensive matrix(low health, under attack & not already defense matrixed)
-							//**************HP-funktioner kanske inte fungerar************
-							if((*i)->isUnderAttack() && ((*i)->getHitPoints() < ((*i)->getType().maxHitPoints() / 5)) && !(*i)->isDefenseMatrixed())
-							{
-								unit->useTech(TechTypes::Defensive_Matrix, (*i));
-								break; //*************
-							}
+							unit->useTech(TechTypes::Defensive_Matrix, (*i));
+							Broodwar->printf("(DBG) defensive matrix used on important unit");
+							break; 
 						}
-					} 
-				}
+					}
+				} 
 			}
 		}
 	}
+	
 
 
 

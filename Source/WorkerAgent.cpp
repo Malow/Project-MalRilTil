@@ -191,7 +191,7 @@ void WorkerAgent::computeActions()
 			{
 				if((*i)->getPlayer() == Broodwar->enemy()) //enemy
 				{
-					if(!(*i)->getType().isFlyer()) //exclude/handle flying units ***(handled by turrets/fleeing(IMPL.)***
+					if(!(*i)->getType().isFlyer()) //exclude air units
 					{
 						//Broodwar->printf("(DBG) enemy is a: %s", (*i)->getType().getName().c_str());
 						if((*i)->isCloaked() || (*i)->isBurrowed() || !(*i)->isVisible())

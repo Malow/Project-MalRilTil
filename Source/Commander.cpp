@@ -60,17 +60,14 @@ void Commander::computeActions()
 	}
 	lastCallFrame = cFrame;
 
-	//****TEMP****
+	//set speed to 0 in beginning of game(once)
 	static bool temp = false;
 	if(temp == false)
 	{
 		Broodwar->setLocalSpeed(0);
 		temp = true;
 	}
-	//**check if there's any nuke dots on the map**
-	//set<Position> nukePositions = Broodwar->getNukeDots();
-	//for(set<Position>::const_iterator i = Broodwar->getNukeDots().begin(); i != Broodwar->getNukeDots().end(); i++)
-
+	
 	// Writing GLHF at start.
 	static bool glhf = true;
 	if(glhf)

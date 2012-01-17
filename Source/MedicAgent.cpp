@@ -27,16 +27,25 @@ void MedicAgent::computeActions()
 			{
 				if((*i)->exists())
 				{
+					
+
 					//check if it's one of our units
 					if((*i)->getPlayer() == Broodwar->self())
 					{
-						//check if it's an important unit(battlecruiser/science vessel/siege tank(both modes))
-						if((*i)->getType() == UnitTypes::Terran_Battlecruiser || (*i)->getType() == UnitTypes::Terran_Science_Vessel || (*i)->getType() == UnitTypes::Terran_Siege_Tank_Siege_Mode || (*i)->getType() == UnitTypes::Terran_Siege_Tank_Siege_Mode)
+						//check if unit has irradiate
+						if((*i)->isIrradiated())
 						{
-							//check if it is plagued/irridiated or locked down
-							if((*i)->isPlagued() || (*i)->isIrradiated() || (*i)->isLockedDown())
+							unit->useTech(TechTypes::Restoration, (*i));
+							Broodwar->printf("(DBG) restoration used to remove irradiate");
+						}
+						//check if it's an important unit(battlecruiser/science vessel/siege tank(both modes))
+						if((*i)->getType() == UnitTypes::Terran_Battlecruiser || (*i)->getType() == UnitTypes::Terran_Science_Vessel || (*i)->getType() == UnitTypes::Terran_Siege_Tank_Siege_Mode || (*i)->getType() == UnitTypes::Terran_Siege_Tank_Tank_Mode)
+						{
+							//check if it is plagued/locked down or blind
+							if((*i)->isPlagued() || (*i)->isLockedDown() || (*i)->isBlind())
 							{
 								unit->useTech(TechTypes::Restoration, (*i));
+								Broodwar->printf("(DBG) restoration used on important unit");
 							}
 						}
 					}

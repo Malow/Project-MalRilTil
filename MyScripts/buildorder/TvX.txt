@@ -11,3 +11,6 @@ Terran_Armory
 Terran_Starport
 Terran_Science_Facility
 
+Terran_Armory
+Terran_Starport
+
